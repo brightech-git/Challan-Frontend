@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import {
     getCompanies,
     createCompany,
+    editCompany,
     updateCompany,
     deleteCompany,
 } from "../../services/companyServices";
@@ -14,11 +15,36 @@ export default function CompanyPage() {
 
     // Company list
     const [companies, setCompanies] = useState([]);
+    console.log("company data",companies)
 
     // Form values
-    const [name, setName] = useState("");
-    const [address, setAddress] = useState("");
-    const [phone, setPhone] = useState("");
+    const [companyId, setcompanyId] = useState("");
+    const [companyName, setcompanyName] = useState("");
+    const [companyType, setcompanyType] = useState("");
+    const [Address1, setAddress1] = useState("");
+    const [Address2, setAddress2] = useState("");
+    const [Address3, setAddress3] = useState("");
+    const [Address4, setAddress4] = useState("");
+    const [areaCode, setareaCode] = useState("");
+    const [phone, setphone] = useState("");
+    const [cstNo, setcstNo] = useState("");
+    const [email, setemail] = useState("");
+    const [localTaxNo, setlocalTaxNo] = useState("");
+    const [panNo ,setpanNo] = useState("");
+    const [tinNo, settinNo] = useState("");
+    const [autoGenerator, setautoGenerator] = useState("");
+    const [costId, setcostId] = useState("");
+    const [active, setactive] = useState("");
+    const [createdAt, setcreatedAt] = useState("");
+    const [gstNo, setgstNo] = useState("");
+    const [displayOrder, setdisplayOrder] = useState("");
+    const [shortKey, setshortKey] = useState("");
+    const [tanNo, settanNo] = useState("");
+    const [upDated, setupDated] = useState("");
+    const [upTime, setupTime] = useState("");
+    const [updatedAt, setupdatedAt] = useState("");
+    const [userId, setuserId] = useState("");
+    
 
     // Store editing company ID
     const [editId, setEditId] = useState(null);
@@ -39,7 +65,7 @@ export default function CompanyPage() {
 
             const data = await getCompanies();
 
-            setCompanies(data);
+            setCompanies(data.data);
             
 
         } catch (error) {
@@ -74,11 +100,31 @@ export default function CompanyPage() {
 
         try {
 
-            const company = {
-                name: name,
-                address: address,
-                phone: phone,
-            };
+            const company = 
+    {
+      "companyId": "",
+      "companyName": "",
+      "companyType": "FROM",
+      "Address1": null,
+      "Address2": null,
+      "Address3": null,
+      "Address4": null,
+      "areaCode": null,
+      "phone": null,
+      "costId": null,
+      "email": null,
+      "localTaxNo": null,
+      "panNo": null,
+      "tinNo": null,
+      "costId":null,
+      "active":null,
+      "gstNo":null,
+      "display":null,
+      "shortKey":null,
+      "tanNo":null,
+    }
+
+
 
 
             // UPDATE
@@ -122,13 +168,37 @@ export default function CompanyPage() {
 
     const editCompany = (company) => {
 
-        setEditId(company.id);
+        setEditId(company.companyId);
 
-        setName(company.name);
+        setcompanyName(company.companyName);
 
-        setAddress(company.address);
+        setcompanyType(company.companyType);
 
-        setPhone(company.phone);
+        setAddress1(company.Address1);
+
+        setAddress2(company.Address2);
+        setAddress3(company.Address3);
+        setAddress4(company.Address4);
+        setareaCode(company.areaCode);
+        setphone(company.phone);
+        setcstNo(company.cstNo);
+        setemail(company.email);
+        setlocalTaxNo(company.localTaxNo);
+        setpanNo(company.panNo);
+        settinNo(company.tinNo);
+        setautoGenerator(company.autoGenerator);
+        setcostId(company.costId);
+        setactive(company.active);
+        setcreatedAt(company.createdAt);
+        setgstNo(company.gstNo);
+        setdisplayOrder(company.displayOrder);
+        setshortKey(company.shortKey);
+        settanNo(company.tanNo);
+        setupDated(company.upDated);
+        setupTime(company.upTime);
+        setupdatedAt(company.updatedAt);
+        setuserId(company.userId);
+
 
     };
 
@@ -172,12 +242,32 @@ export default function CompanyPage() {
 
     const clearForm = () => {
 
-        setName("");
-
-        setAddress("");
-
-        setPhone("");
-
+        setcompanyId("");
+        setcompanyName("");
+        setcompanyType("");
+        setAddress1("");
+        setAddress2("");
+        setAddress3("");
+        setAddress4("");
+        setareaCode("");
+        setphone("");
+        setcstNo("");
+        setemail("");
+        setlocalTaxNo("");
+        setpanNo("");
+        settinNo("");
+        setautoGenerator("");
+        setcostId("");
+        setactive("");
+        setcreatedAt("");
+        setgstNo("");
+        setdisplayOrder("");
+        setshortKey("");
+        settanNo("");
+        setupDated("");
+        setupTime("");
+        setupdatedAt("");
+        setuserId("");
         setEditId(null);
 
     };
@@ -213,30 +303,102 @@ export default function CompanyPage() {
                 <form
                     onSubmit={saveCompany}
                     className="grid gap-4"
-                >
-
-                    {/* NAME */}
+                >          {/* companyId */}
 
                     <input
                         type="text"
-                        placeholder="Company Name"
-                        value={name}
+                        placeholder="CompanyId"
+                        value={companyId}
                         onChange={(e) =>
-                            setName(e.target.value)
+                            setcompanyId(e.target.value)
                         }
                         className="rounded border p-3"
                         required
                     />
 
 
-                    {/* ADDRESS */}
+                    {/* companyNAME */}
 
                     <input
                         type="text"
-                        placeholder="Address"
-                        value={address}
+                        placeholder="CompanyName"
+                        value={companyName}
                         onChange={(e) =>
-                            setAddress(e.target.value)
+                            setcompanyName(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+
+
+                    {/* companyType */}
+
+                    <input
+                        type="text"
+                        placeholder="companyType"
+                        value={companyType}
+                        onChange={(e) =>
+                            setcompanyType(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    {/* companyAddress1 */}
+
+                    <input
+                        type="text"
+                        placeholder="Address1"
+                        value={Address1}
+                        onChange={(e) =>
+                            setAddress1(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    {/* companyAddress2 */}
+
+                    <input
+                        type="text"
+                        placeholder="Address2"
+                        value={Address2}
+                        onChange={(e) =>
+                            setAddress2(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    {/* companyAddress3 */}
+
+                    <input
+                        type="text"
+                        placeholder="Address3"
+                        value={Address3}
+                        onChange={(e) =>
+                            setAddress3(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    {/* companyAdress4*/}
+
+                    <input
+                        type="text"
+                        placeholder="Address4"
+                        value={Address4}
+                        onChange={(e) =>
+                            setAddress4(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    {/* companyareaCode */}
+
+                    <input
+                        type="text"
+                        placeholder="areaCode"
+                        value={areaCode}
+                        onChange={(e) =>
+                            setareaCode(e.target.value)
                         }
                         className="rounded border p-3"
                         required
@@ -255,11 +417,183 @@ export default function CompanyPage() {
                         className="rounded border p-3"
                         required
                     />
+                    <input
+                        type="text"
+                        placeholder="cstNo"
+                        value={cstNo}
+                        onChange={(e) =>
+                            setcstNo(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="email"
+                        value={email}
+                        onChange={(e) =>
+                            setemail(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="localTaxNo"
+                        value={localTaxNo}
+                        onChange={(e) =>
+                            setlocalTaxNo(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="panNo"
+                        value={panNo}
+                        onChange={(e) =>
+                            setpanNo(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="tinNo"
+                        value={tinNo}
+                        onChange={(e) =>
+                            settinNo(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="autoGenerator"
+                        value={autoGenerator}
+                        onChange={(e) =>
+                            setautoGenerator(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="costId"
+                        value={costId}
+                        onChange={(e) =>
+                            setcostId(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="active"
+                        value={active}
+                        onChange={(e) =>
+                            setactive(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="createdAt"
+                        value={createdAt}
+                        onChange={(e) =>
+                            setcreatedAt(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="gstNo"
+                        value={gstNo}
+                        onChange={(e) =>
+                            setgstNo(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="displayOrder"
+                        value={displayOrder}
+                        onChange={(e) =>
+                            setdisplayOrder(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="shortKey"
+                        value={shortKey}
+                        onChange={(e) =>
+                            setshortKey(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="tanNo"
+                        value={tanNo}
+                        onChange={(e) =>
+                            settanNo(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="upDated"
+                        value={upDated}
+                        onChange={(e) =>
+                            setupDated(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="upTime"
+                        value={upTime}
+                        onChange={(e) =>
+                            setupTime(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="updatedAt"
+                        value={updatedAt}
+                        onChange={(e) =>
+                            setupdatedAt(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    <input
+                        type="text"
+                        placeholder="userId"
+                        value={userId}
+                        onChange={(e) =>
+                            setuserId(e.target.value)
+                        }
+                        className="rounded border p-3"
+                        required
+                    />
+                    
 
 
                     {/* BUTTONS */}
 
                     <div className="flex gap-3">
+                    
 
                         <button
                             type="submit"
@@ -327,23 +661,86 @@ export default function CompanyPage() {
                                 <tr className="bg-gray-200">
 
                                     <th className="border p-3 text-left">
-                                        ID
+                                       campanyID
                                     </th>
 
                                     <th className="border p-3 text-left">
-                                        Company Name
+                                        CompanyName
                                     </th>
 
                                     <th className="border p-3 text-left">
-                                        Address
+                                       campanyType
+                                    </th>
+                                    <th className="border p-3 text-left">
+                                        Address1
+                                    </th>
+                                    <th className="border p-3 text-left">
+                                        Address2
+                                    </th>
+                                    <th className="border p-3 text-left">
+                                        Address3
+                                    </th>
+                                    <th className="border p-3 text-left">
+                                        Address4
+                                    </th>
+                                    <th className="border p-3 text-left">
+                                        areaCode
+                                    </th>
+                                    <th className="border p-3 text-left">
+                                        phone
                                     </th>
 
                                     <th className="border p-3 text-left">
-                                        Phone
+                                        cstNo
                                     </th>
 
                                     <th className="border p-3 text-center">
-                                        Action
+                                        email
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        localTaxNo
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        panNo
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        tinNo
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        autoGenerator
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        costId
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                       active
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        createdAt
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                       gstNo
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        displayOrder
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                       shortKey
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                       tanNo
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        upDated
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                       upTime
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                        updatedAt
+                                    </th>
+                                    <th className="border p-3 text-center">
+                                       userId
                                     </th>
 
                                 </tr>
@@ -352,28 +749,93 @@ export default function CompanyPage() {
 
 
                             <tbody>
-
+                            
                                 {companies.map((company) => (
+                                    
 
-                                    <tr key={company.id}>
-
-                                        <td className="border p-3">
-                                            {company.id}
-                                        </td>
-
-                                        <td className="border p-3">
-                                            {company.name}
-                                        </td>
+                                    <tr key={company.companyId}>
+                                       <td> {company.companyId}
+                                       </td>
 
                                         <td className="border p-3">
-                                            {company.address}
+                                            {company.companyName}
                                         </td>
+                                        <td className="border p-3">
+                                            {company.companyType}
 
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.address1}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.address2}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.address3}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.address4}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.areaCode}
+                                        </td>
                                         <td className="border p-3">
                                             {company.phone}
                                         </td>
-
                                         <td className="border p-3">
+
+                                            {company.cstNo}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.email}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.localTaxNo}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.panNo}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.tinNO}
+                                        </td>
+                                        
+                                        <td className="border p-3">
+                                            {company.autoGenerator}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.costId}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.active}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.createdAt}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.gstNo}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.displayOrder}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.shortKey}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.tanNo}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.upDated}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.upTime}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.updatedAt}
+                                        </td>
+                                        <td className="border p-3">
+                                            {company.userId}
+                                        </td>
+                                          <td className="border p-3">
 
                                             <div className="flex justify-center gap-2">
 

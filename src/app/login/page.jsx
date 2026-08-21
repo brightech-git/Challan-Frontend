@@ -54,6 +54,7 @@ export default function LoginPage() {
                     className="w-full rounded bg-blue-500 p-2 text-white"
                 >
                     Login
+                    
                 </button>
 
             </form>
