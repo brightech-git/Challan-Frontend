@@ -12,16 +12,21 @@ export default function Dashboard() {
         const login = localStorage.getItem("login");
 
         if (login !== "true") {
-            router.push("/login");
+            router.push("/LoginScreen");
         }
 
     }, []);
 
+    const Company = () => {
+
+
+        router.push("/CompanyScreen");
+    };
     const logout = () => {
 
-        // localStorage.removeItem("login");
+        localStorage.removeItem("login");
 
-        router.push("/company");
+        router.push("/LoginScreen");
     };
 
     return (
@@ -35,6 +40,12 @@ export default function Dashboard() {
                 Welcome to Dashboard
             </p>
 
+            <button
+                onClick={Company}
+                className="rounded bg-red-500 px-6 py-2 text-white"
+            >
+                Company 
+            </button>
             <button
                 onClick={logout}
                 className="rounded bg-red-500 px-6 py-2 text-white"

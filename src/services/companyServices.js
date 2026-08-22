@@ -134,3 +134,4 @@ export async function deleteCompany(companyId) {
         throw error;
     }
 }
+

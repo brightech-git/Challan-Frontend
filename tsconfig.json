@@ -30,7 +30,7 @@
     "**/*.mts",
     "**/*.ts",
     "**/*.tsx"
-, "src/app/login/page.jsx", "src/app/company/page.jsx"  ],
+, "src/app/login/page.jsx", "src/app/CompanyScreen/page.jsx"  ],
   "exclude": [
     "node_modules"
   ]
