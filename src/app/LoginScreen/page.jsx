@@ -35,13 +35,13 @@ export default function LoginScreen() {
 
       setLogin(response);
 
-      router.push("/CompanyScreen");
+      router.push("/Dashboard");
 
     } catch (error) {
       console.error("LOGIN FAILED:", error);
     }
   };
-
+  
 
   return (
     <>

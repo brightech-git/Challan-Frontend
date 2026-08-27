@@ -7,7 +7,9 @@ import {
   createCompany,
   updateCompany,
   deleteCompany,
-} from "../../services/companyServices";
+} from "../../../services/companyServices";
+
+import { FaEdit, FaTrash, FaSearch } from "react-icons/fa";
 
 // =========================================================
 // INPUT COMPONENT
@@ -98,7 +100,6 @@ export default function CompanyPage() {
 
   const [displayOrder, setDisplayOrder] = useState("");
   const [shortKey, setShortKey] = useState("");
-  const [userId, setUserId] = useState("");
 
   // =========================================================
   // EDIT STATE
@@ -228,7 +229,7 @@ export default function CompanyPage() {
 
       displayOrder: valueOrNull(displayOrder),
       shortKey: valueOrNull(shortKey),
-      userId: valueOrNull(userId),
+
     };
 
     console.log("Company request body:", company);
@@ -318,8 +319,6 @@ export default function CompanyPage() {
 
     setShortKey(company.shortKey || "");
 
-    setUserId(company.userId || "");
-
     // Scroll to top
     window.scrollTo({
       top: 0,
@@ -400,7 +399,6 @@ export default function CompanyPage() {
 
     setDisplayOrder("");
     setShortKey("");
-    setUserId("");
 
     setEditId(null);
   };
@@ -417,10 +415,6 @@ export default function CompanyPage() {
 
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900">Company</h1>
-
-        <p className="mt-1 text-sm text-gray-500">
-          Create, update and manage companies
-        </p>
       </div>
 
       {/* =================================================
@@ -429,21 +423,10 @@ export default function CompanyPage() {
 
       <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
         <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">
-              {editId ? "Update Company" : "Create Company"}
-            </h2>
 
-            <p className="mt-1 text-sm text-gray-500">
-              {editId
-                ? "Update the company details below."
-                : "Enter the company details below."}
-            </p>
-          </div>
 
           {editId && (
             <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
-              Editing: {editId}
             </span>
           )}
         </div>
@@ -459,29 +442,41 @@ export default function CompanyPage() {
             </h3>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <InputField
-                label="Company ID"
-                value={companyId}
-                onChange={(e) => setCompanyId(e.target.value)}
-                required
-                disabled={!!editId}
-              />
 
-              <InputField
-                label="Company Name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                required
-              />
+  <InputField
+    label="Company ID"
+    value={companyId}
+    onChange={(e) => setCompanyId(e.target.value)}
+    required
+    disabled={!!editId}
+  />
 
-              <InputField
-                label="Company Type"
-                value={companyType}
-                onChange={(e) => setCompanyType(e.target.value)}
-                required
-                placeholder="FROM"
-              />
-            </div>
+  <InputField
+    label="Company Name"
+    value={companyName}
+    onChange={(e) => setCompanyName(e.target.value)}
+    required
+  />
+
+  {/* Company Type */}
+  <div>
+    <label className="mb-1 block text-sm font-medium text-gray-700">
+      Company Type
+    </label>
+
+    <select
+      value={companyType}
+      onChange={(e) => setCompanyType(e.target.value)}
+      required
+      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+    >
+      <option value="">Select Type</option>
+      <option value="FROM">FROM</option>
+      <option value="TO">TO</option>
+    </select>
+  </div>
+
+</div>
           </div>
 
           {/* =================================================
@@ -548,6 +543,8 @@ export default function CompanyPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
+                placeholder="example@gmail.com"
+                required
               />
             </div>
           </div>
@@ -616,18 +613,22 @@ export default function CompanyPage() {
                 onChange={(e) => setCostId(e.target.value)}
               />
 
-              <InputField
-                label="Auto Generator"
-                value={autoGenerator}
-                onChange={(e) => setAutoGenerator(e.target.value)}
-              />
+              <label>Active</label>
 
-              <InputField
+              <select
                 label="Active"
                 value={active}
                 onChange={(e) => setActive(e.target.value)}
-                placeholder="1 / 0"
-              />
+                required
+              >
+                <option value="">Select Type</option>
+                <option value="1">yes</option>
+                <option value="0">no</option>
+              </select>
+
+
+
+
 
               <InputField
                 label="Display Order"
@@ -640,12 +641,6 @@ export default function CompanyPage() {
                 label="Short Key"
                 value={shortKey}
                 onChange={(e) => setShortKey(e.target.value)}
-              />
-
-              <InputField
-                label="User ID"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
               />
             </div>
           </div>
@@ -712,34 +707,81 @@ export default function CompanyPage() {
       <div className="rounded-xl bg-white p-6 shadow-sm">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Company List</h2>
+            <h2 className="text-xl font-bold text-gray-900">Company list</h2>
 
             <p className="mt-1 text-sm text-gray-500">
               {companies.length} company
               {companies.length !== 1 ? "ies" : ""}
             </p>
           </div>
+          {/* SEARCH + REFRESH */}
 
-          <button
-            type="button"
-            onClick={loadCompanies}
-            disabled={loading}
-            className="
-                            rounded-lg
-                            border
-                            border-gray-300
-                            bg-white
-                            px-4
-                            py-2
-                            text-sm
-                            font-medium
-                            text-gray-700
-                            hover:bg-gray-50
-                            disabled:opacity-50
-                        "
-          >
-            {loading ? "Loading..." : "Refresh"}
-          </button>
+          <div className="mb-5 flex gap-2">
+
+            <div className="relative flex-1">
+
+              <FaSearch
+                className="
+                  absolute
+                  left-3
+                  top-1/2
+                  -translate-y-1/2
+                  text-gray-400
+                "
+                size={14}
+              />
+
+              <input
+                type="text"
+                placeholder="Search company..."
+                value={FaSearch}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+                className="
+                  w-full
+                  rounded-lg
+                  border
+                  border-gray-300
+                  py-2.5
+                  pl-9
+                  pr-3
+                  text-sm
+                  outline-none
+                  focus:border-blue-500
+                  focus:ring-2
+                  focus:ring-blue-100
+                "
+              />
+
+            </div>
+
+            <button
+              type="Refreshbutton"
+              onClick={loadCompanies}
+              disabled={loading}
+              title="Refresh"
+              className="
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-lg
+                border
+                border-gray-300
+                bg-white
+                text-gray-600
+                hover:bg-gray-50
+                disabled:opacity-50
+              "
+            >
+            </button>
+
+          </div>
+
+
+
         </div>
 
         {/* =================================================
@@ -836,10 +878,6 @@ export default function CompanyPage() {
                   </th>
 
                   <th className="border p-3 text-left text-sm font-semibold">
-                    Auto Generator
-                  </th>
-
-                  <th className="border p-3 text-left text-sm font-semibold">
                     Cost ID
                   </th>
 
@@ -853,10 +891,6 @@ export default function CompanyPage() {
 
                   <th className="border p-3 text-left text-sm font-semibold">
                     Short Key
-                  </th>
-
-                  <th className="border p-3 text-left text-sm font-semibold">
-                    User ID
                   </th>
 
                   <th className="sticky right-0 border bg-gray-100 p-3 text-center text-sm font-semibold">
@@ -933,10 +967,6 @@ export default function CompanyPage() {
                     </td>
 
                     <td className="border p-3 text-sm">
-                      {company.autoGenerator ?? "-"}
-                    </td>
-
-                    <td className="border p-3 text-sm">
                       {company.costId ?? "-"}
                     </td>
 
@@ -950,10 +980,6 @@ export default function CompanyPage() {
 
                     <td className="border p-3 text-sm">
                       {company.shortKey ?? "-"}
-                    </td>
-
-                    <td className="border p-3 text-sm">
-                      {company.userId ?? "-"}
                     </td>
 
                     {/* =================================================
@@ -980,7 +1006,7 @@ export default function CompanyPage() {
                                                         disabled:opacity-50
                                                     "
                         >
-                          Edit
+                          <FaEdit size={14} />
                         </button>
 
                         {/* DELETE */}
@@ -1002,9 +1028,7 @@ export default function CompanyPage() {
                                                         disabled:opacity-50
                                                     "
                         >
-                          {deleting === company.companyId
-                            ? "Deleting..."
-                            : "Delete"}
+                          <FaTrash size={14} />
                         </button>
                       </div>
                     </td>

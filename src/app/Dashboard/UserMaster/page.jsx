@@ -1,11 +1,8 @@
+
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import {
-  getAll,
-  getUserById,
-  createUser,
-} from "../../services/authServices";
+import { getAll,createUser,getUserById } from "../../../services/authServices";
 
 export default function UserMaster() {
   const [users, setUsers] = useState([]);
