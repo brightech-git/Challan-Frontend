@@ -46,8 +46,18 @@ export default function Sidebar() {
           <span>👤</span>
           <span>User Master</span>
         </Link>
-
-        {/* Logout */}
+        
+        {/* MetalMaster*/}
+        <Link
+          href="/Dashboard/MetalMaster"
+           onClick={console.log("User master clicked")}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-600 transition"
+        >
+          <span>🏭</span>
+          <span>MetalMaster</span>
+        </Link>
+        
+         {/* Logout */}
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 transition text-left"

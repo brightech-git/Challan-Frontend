@@ -35,6 +35,9 @@ export default function LoginScreen() {
 
       setLogin(response);
 
+      localStorage.setItem("login", "true");
+      localStorage.setItem("user", JSON.stringify(response));
+
       router.push("/Dashboard");
 
     } catch (error) {

@@ -16,6 +16,14 @@ export default function UserMaster() {
 
   const [editingUserId, setEditingUserId] = useState(null);
   const [message, setMessage] = useState("");
+  const [loggedUserId, setLoggedUserId] = useState("");
+
+  useEffect(() => {
+    const loggedUser = localStorage.getItem("user");
+    const loggedUserData = loggedUser ? JSON.parse(loggedUser) : null;
+
+    setLoggedUserId(loggedUserData?.userId || "");
+  }, []);
 
   // Get all users
   const loadUsers = useCallback(async () => {
@@ -49,13 +57,11 @@ export default function UserMaster() {
 
     try {
       const newUser = {
-        userId: formData.userId,
         name: formData.name,
         password: formData.password,
-        createdBy: formData.createdBy,
       };
 
-      await createUser(newUser);
+      await createUser(newUser, loggedUserId);
 
       setMessage("User created successfully");
 
@@ -207,19 +213,19 @@ export default function UserMaster() {
               }
             >
 
-              <div className="form-group">
-                <label>User ID</label>
+              {editingUserId && (
+                <div className="form-group">
+                  <label>User ID</label>
 
-                <input
-                  type="text"
-                  name="userId"
-                  value={formData.userId}
-                  onChange={handleChange}
-                  disabled={!!editingUserId}
-                  required
-                  placeholder="Enter User ID"
-                />
-              </div>
+                  <input
+                    type="text"
+                    name="userId"
+                    value={formData.userId}
+                    onChange={handleChange}
+                    disabled
+                  />
+                </div>
+              )}
 
               <div className="form-group">
                 <label>Name</label>
@@ -244,18 +250,6 @@ export default function UserMaster() {
                   onChange={handleChange}
                   required={!editingUserId}
                   placeholder="Enter Password"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>Created By</label>
-
-                <input
-                  type="text"
-                  name="createdBy"
-                  value={formData.createdBy}
-                  onChange={handleChange}
-                  placeholder="Enter Created By"
                 />
               </div>
 

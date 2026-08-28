@@ -56,19 +56,22 @@ export async function getUserById(userId) {
         throw error;
     }
 }
-export async function createUser(user) {
-    
+export async function createUser(user, loggedUserId) {
+
     try {
         console.log("Creating user:", user);
+        console.log("loggeduserid",loggedUserId)
 
-        const response = await fetch(API_URL, {
+        const response = await fetch(API_URL,{
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                userId:loggedUserId,
             },
+
             body: JSON.stringify(user),
         });
-
+console.log("response",response)
         const result = await handleResponse(response);
 
         console.log("Create user response:", result);
