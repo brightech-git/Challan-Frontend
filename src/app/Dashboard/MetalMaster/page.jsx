@@ -34,8 +34,8 @@ export default function MetalMaster() {
       const response = await getAllMetal();
       setMetal(response?.data || response || []);
     } catch (error) {
-      console.error("Error loading users:", error);
-      setMessage("Failed to load users");
+      console.error("Error loading metal:", error);
+      setMessage("Failed to load metal");
     }
   }, []);
 
