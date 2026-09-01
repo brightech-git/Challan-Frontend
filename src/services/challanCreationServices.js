@@ -35,7 +35,7 @@ export async function getAllChallanCreation() {
 
 export async function getByChallanCreationId(challanId) {
     try {
-        console.log("getById challanChallanCreation:", challanId);
+        console.log("getById ChallanCreation:", challanId);
 
         const response = await fetch(`${API_URL}/${encodeURIComponent(challanId)}`, {
             method: "GET",

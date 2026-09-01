@@ -65,6 +65,16 @@ export default function Sidebar() {
      <span>🧾</span>
      <span>ChallanCreation</span>
       </Link>
+
+      <Link
+         href="/Dashboard/ChallanFormat"
+         onClick={() => console.log(" challanFormat clicked")}
+         className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-blue-600 transition"
+        >
+        <span>🖨️</span>
+       <span>ChallanFormat</span>
+      </Link>
+
         
          {/* Logout */}
         <button
