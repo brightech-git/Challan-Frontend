@@ -8,40 +8,45 @@ export default function Dashboard() {
     const router = useRouter();
 
     useEffect(() => {
-
+      localStorage.clear();
         const login = localStorage.getItem("login");
-
         if (login !== "true") {
-            router.push("/login");
+            router.replace("/LoginScreen");
+        } else {
+            router.replace("/Dashboard");
+        }
+    }, [router]);
+
+    return null;
+}
+<style jsx>{`
+        .dashboard {
+          min-height: 100vh;
+          padding: 30px;
+          background-color: #f5f7fb;
+          font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         }
 
-    }, []);
+        .dashboard h1 {
+          font-size: 32px;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 10px;
+        }
 
-    const logout = () => {
+        .dashboard p {
+          font-size: 16px;
+          color: #6b7280;
+        }
 
-        // localStorage.removeItem("login");
+        @media (max-width: 600px) {
+          .dashboard {
+            padding: 15px;
+          }
 
-        router.push("/company");
-    };
-
-    return (
-        <div className="flex min-h-screen flex-col items-center justify-center">
-
-            <h1 className="mb-4 text-4xl font-bold">
-                Dashboard
-            </h1>
-
-            <p className="mb-4">
-                Welcome to Dashboard
-            </p>
-
-            <button
-                onClick={logout}
-                className="rounded bg-red-500 px-6 py-2 text-white"
-            >
-                Logout
-            </button>
-
-        </div>
-    );
-}
+          .dashboard h1 {
+            font-size: 26px;
+          }
+        }
+      `}</style>
+    
