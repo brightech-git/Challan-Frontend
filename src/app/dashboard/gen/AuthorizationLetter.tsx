@@ -11,6 +11,7 @@ export interface AuthorizationLetterData {
   sentDate: string | Date | null | undefined;
   destination: string;
 
+  goldWeight?: string | number | null;
   ornamentsWeight?: string | number | null;
   cashAmount?: string | number | null;
   amountInWordsText?: string | null;
@@ -85,12 +86,12 @@ export default function AuthorizationLetter({
 
           <div className="brand-text">
             <div className="company-name">
-              {c.companyName || "LAXMI JEWELLERY"}
+              {c.companyName || "Laxmi Jewellery"}
             </div>
 
             <div className="company-subtitle">
               {c.subtitle ||
-                "MANUFACTURER • WHOLESALER • EXPORTER"}
+                "MANUFACTURERS • WHOLESALERS • EXPORTERS"}
             </div>
           </div>
 
@@ -158,7 +159,7 @@ export default function AuthorizationLetter({
       ===================================================== */}
 
       <div className="subject-line">
-        Subject to {data.jurisdiction || "Chennai"} Jurisdiction
+        SUBJECT TO {data.jurisdiction || "CHENNAI"} JURISDICTION
       </div>
 
 
@@ -167,7 +168,7 @@ export default function AuthorizationLetter({
       ===================================================== */}
 
       <div className="authorization-title">
-        Authorization for Transportation of Goods
+        AUTHORISATION FOR TRANSPORTATION OF GOODS
       </div>
 
 
@@ -182,94 +183,74 @@ export default function AuthorizationLetter({
 
       <div className="letter-content">
 
-        <p>
+        <p className="first-paragraph">
           This is to certify that Sri/Smt/M/s{" "}
-          <span className="fill-line">
+          <span className="fill-line-bold">
             {data.carrierName || "________________________"}
           </span>{" "}
-          is our Authorized Employee / Logistics /
-          Representative / Director / Customer and the Gold /
-          Gold Ornaments detailed below is sent with him on
-          dated{" "}
-          <span className="fill-line">
+          is our Authorized Employee / Logistics / Representative / Director / Customer and the Gold / Gold Ornaments / Cash, detailed below is sent with him on dated{" "}
+          <span className="fill-line-bold">
             {dateFormat(data.sentDate)}
           </span>{" "}
           To{" "}
-          <span className="fill-line">
+          <span className="fill-line-bold" style={{ display: 'inline' }}>
             {data.destination || "________________________"}
           </span>{" "}
-          for Sample / Approval / Exchange / Manufacture /
-          Repair / Sell / Hallmarking / Bank / Marketing.
+          for Sample / Approval / Exchange / Manufacture / Repair / Sale / Hallmarking / Bank / Marketing.
         </p>
 
 
         <p>
-          He carries Ornaments / Fine Gold / Cash as delivered
-          by us / our customer / Gold smith against Order /
-          Job work / Sales / Purchases.
+          He carries Ornaments / Fine Gold / Cash as delivered by us / our customer / Gold smith against Order / Job work / Sales / Purchases.
         </p>
 
 
         <p>
-          Once the goods are selected and approved, Sales
-          Invoice / Purchase Invoice / Job work Invoice will
-          be issued. This details of Gold / Ornaments / Cash
-          are given below.
+          Once the goods are selected and approved, Sales Invoice / Purchase Invoice / Job work Invoice will be issued. This details of Gold / Ornaments / Cash are given below.
         </p>
 
 
         {/* =================================================
-            WEIGHT / CASH
+            WEIGHT / CASH - SAME LINE
         ================================================= */}
 
         <div className="details-block">
 
-          <div className="detail-row">
-
-            <div className="detail-item">
-              <span>Ornaments Weight :</span>
-              <strong>
-                {data.ornamentsWeight ?? "—"} gm
-              </strong>
-            </div>
-
-            <div className="detail-item">
-              <span>Cash :</span>
-              <strong>
-                {data.cashAmount ?? "—"}
-              </strong>
-            </div>
-
-          </div>
-
-
-          <div className="words-row">
-            <span>In (Words) :</span>
-
-            <strong>
-              {data.amountInWordsText || "—"}
-            </strong>
-
-            <span>Respectively.</span>
-          </div>
-
-
-          <div className="invoice-row">
-            <span>
-              Tax Invoice / Delivery Challan No :
+          <div className="detail-row-single">
+            <span className="label-normal">Gold weight :</span>
+            <span className="value-underline">
+           
             </span>
+            <span className="label-normal">Ornaments weight :</span>
+            <span className="value-underline">
+              {data.ornamentsWeight ?? "______"}
+            </span>
+            <span className="label-normal">gm.</span>
+            <span className="label-normal" style={{ marginLeft: '6mm' }}>Cash :</span>
+            <span className="value-underline">
+              {data.cashAmount ?? "______"}
+            </span>
+          </div>
 
-            <strong>
-              {data.invoiceNo || "—"}
-            </strong>
 
-            <span>, Dated :</span>
+          <div className="words-row-single">
+            <span className="label-normal">In (Words) :</span>
+            <span className="value-underline">
+              {data.amountInWordsText || "______"}
+            </span>
+          </div>
 
-            <strong>
+
+          <div className="invoice-row-single">
+            <span className="label-normal">Tax Invoice / Delivery Challan No :</span>
+            <span className="value-underline">
+              {data.invoiceNo || "______"}
+            </span>
+            <span className="label-normal">, Dated :</span>
+            <span className="value-underline">
               {dateFormat(data.invoiceDate)}
-            </strong>
-
-            <span>Respectively.</span>
+            </span>
+            <span className="label-normal">Respectively.</span>
           </div>
 
         </div>
@@ -296,7 +277,7 @@ export default function AuthorizationLetter({
           <div className="company-signature">
 
             <div className="for-company">
-              For {c.companyName || "LAXMI JEWELLERY"}
+              For {c.companyName || "LAXMI JEWELLERY CHENNAI PVT.LTD."}
             </div>
 
             <div className="stamp-area">
@@ -304,7 +285,7 @@ export default function AuthorizationLetter({
             </div>
 
             <div className="director-line">
-              Director / Authorised signatory
+              Director / Authorised Signatory
             </div>
 
           </div>
@@ -321,12 +302,12 @@ export default function AuthorizationLetter({
       <div className="letter-footer">
 
         <strong>
-          {c.companyName || "LAXMI JEWELLERY CHENNAI PVT. LTD."}
+          {c.companyName || "LAXMI JEWELLERY CHENNAI (P) LTD"}
         </strong>
 
         {c.branchAddress && (
           <div>
-            Branch Off. : {c.branchAddress}
+            Branch Off : {c.branchAddress}
             {c.branchPhone && (
               <>
                 {" , Phone : "}
@@ -338,7 +319,7 @@ export default function AuthorizationLetter({
 
         {c.regdAddress && (
           <div>
-            Regd. Off. : {c.regdAddress}
+            Regd. Off : {c.regdAddress}
           </div>
         )}
 

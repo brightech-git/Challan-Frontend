@@ -271,7 +271,7 @@ export default function GenerateAuthorizationPage() {
           from?.email ?? "",
 
         website:
-          "www.laxmijewellery.in",
+          "https://jaigurujewellers.com/",
 
         cin:
           "",
@@ -292,7 +292,7 @@ export default function GenerateAuthorizationPage() {
           companyAddress,
 
         centreNo:
-          "2828",
+          "",
       },
     };
   }
