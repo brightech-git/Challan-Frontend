@@ -26,7 +26,6 @@ export default function GenerateReceiptPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [documentType, setDocumentType] = useState<DocumentType>("delivery-challan");
   const [isDownloading, setIsDownloading] = useState(false);
-  const [isPrinting, setIsPrinting] = useState(false);
   
   const printRef = useRef<HTMLDivElement>(null);
   const printRefAuth = useRef<HTMLDivElement>(null);
@@ -128,76 +127,15 @@ export default function GenerateReceiptPage() {
     pdf.save(filename);
   };
 
-  const handlePrint = async () => {
+  const handlePrint = () => {
     if (!tranWt) return;
 
-    setIsPrinting(true);
-
-    try {
-      const node = documentType === "delivery-challan" 
-        ? printRef.current 
-        : printRefAuth.current;
-      
-      if (node) {
-        const styles = document.querySelectorAll('style');
-        let styleTags = '';
-        styles.forEach(style => {
-          styleTags += style.innerHTML;
-        });
-
-        const links = document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]');
-        let linkTags = '';
-        links.forEach(link => {
-          linkTags += `<link rel="stylesheet" href="${link.href}" />`;
-        });
-
-        const printWindow = window.open('', '_blank', 'width=800,height=600');
-        if (printWindow) {
-          printWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Print Document</title>
-                <style>
-                  @page { 
-                    size: A4 portrait; 
-                    margin: 0; 
-                  }
-                  body { 
-                    margin: 0; 
-                    padding: 0; 
-                    background: white;
-                  }
-                  * { 
-                    -webkit-print-color-adjust: exact !important;
-                    print-color-adjust: exact !important;
-                    color-adjust: exact !important;
-                  }
-                  @media print {
-                    .no-print { display: none !important; }
-                  }
-                </style>
-                ${linkTags}
-                <style>${styleTags}</style>
-              </head>
-              <body>
-                ${node.outerHTML}
-              </body>
-            </html>
-          `);
-          printWindow.document.close();
-          printWindow.focus();
-          setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-          }, 500);
-        }
-      }
-    } catch (error) {
-      console.error("Print error:", error);
-    } finally {
-      setIsPrinting(false);
-    }
+    // DeliveryChallan.css / Authorization.css already define an
+    // @media print block that hides everything except the visible
+    // #receipt-printable / #auth-letter-printable element, so printing
+    // the current window directly (no extra popup window) picks up
+    // whichever document is currently selected.
+    window.print();
   };
 
   const handleDownloadPdf = async () => {
@@ -319,8 +257,7 @@ export default function GenerateReceiptPage() {
                 aria-label="Print"
                 title="Print"
                 onClick={handlePrint}
-                disabled={!tranWt || isPrinting}
-                loading={isPrinting}
+                disabled={!tranWt}
                 variant="ghost"
                 color="gray.800"
                 _dark={{ color: "gray.100" }}

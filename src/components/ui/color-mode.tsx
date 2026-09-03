@@ -1,45 +1,64 @@
 "use client";
 
+import { useCallback, useLayoutEffect, useSyncExternalStore } from "react";
 import { IconButton, Skeleton, type IconButtonProps } from "@chakra-ui/react";
-import { ThemeProvider, useTheme, type ThemeProviderProps } from "next-themes";
 import { LuMoon, LuSun } from "react-icons/lu";
+import {
+  applyColorMode,
+  colorModeStore,
+  setStoredColorMode,
+  type ColorMode,
+} from "@/lib/theme-storage";
 
-export type ColorModeProviderProps = ThemeProviderProps;
+export type { ColorMode };
 
 /**
- * Wraps next-themes' ThemeProvider with the attribute/props Chakra expects
- * (a "dark"/"light" class on <html>, matching the semantic tokens defined
- * in theme/system.ts). Mounted once in components/ui/provider.tsx.
+ * Keeps <html>'s class in sync with the color-mode store. The initial
+ * class is already applied before hydration by the inline script in
+ * app/layout.tsx — this effect re-applies it (a) whenever the store
+ * changes after mount (toggle, cross-tab storage event, OS theme change)
+ * and (b) after React's dev Strict Mode remount, which otherwise resets
+ * <html>'s class to whatever the layout's JSX manages. See
+ * node_modules/next/dist/docs/01-app/02-guides/preventing-flash-before-hydration.md.
+ *
+ * Mounted once in components/ui/provider.tsx.
  */
-export function ColorModeProvider(props: ColorModeProviderProps) {
-  return (
-    <ThemeProvider attribute="class" disableTransitionOnChange {...props} />
+export function ColorModeProvider({ children }: { children: React.ReactNode }) {
+  const colorMode = useSyncExternalStore(
+    colorModeStore.subscribe,
+    colorModeStore.getSnapshot,
+    colorModeStore.getServerSnapshot
   );
+
+  useLayoutEffect(() => {
+    applyColorMode(colorMode);
+  }, [colorMode]);
+
+  return <>{children}</>;
 }
 
-export type ColorMode = "light" | "dark";
-
 /**
- * Thin wrapper around next-themes' useTheme() that resolves "system" down
- * to an actual "light"/"dark" value and exposes a simple toggle — the one
- * hook every themed component in the app should use instead of reaching
- * into next-themes directly.
- *
- * `resolvedTheme` is genuinely `undefined` until next-themes has read the
- * real preference client-side (it withholds it during SSR to avoid a
- * hydration mismatch) — callers that need to distinguish "not yet known"
- * from "light" should check `resolvedTheme` directly rather than
- * `colorMode`, which always defaults unresolved to "light".
+ * Reads/writes the shared color-mode store (lib/theme-storage.ts) via
+ * useSyncExternalStore — the server snapshot is always "light" (no
+ * localStorage/matchMedia on the server), so hydration never mismatches.
+ * Same pattern as useAuth, for the same reason.
  */
 export function useColorMode() {
-  const { resolvedTheme, setTheme, theme } = useTheme();
-  const colorMode = (resolvedTheme ?? "light") as ColorMode;
+  const colorMode = useSyncExternalStore(
+    colorModeStore.subscribe,
+    colorModeStore.getSnapshot,
+    colorModeStore.getServerSnapshot
+  );
 
-  const toggleColorMode = () => {
-    setTheme(colorMode === "dark" ? "light" : "dark");
-  };
+  const setColorMode = useCallback((mode: ColorMode) => {
+    setStoredColorMode(mode);
+  }, []);
 
-  return { colorMode, resolvedTheme, setColorMode: setTheme, toggleColorMode, theme };
+  const toggleColorMode = useCallback(() => {
+    setStoredColorMode(colorMode === "dark" ? "light" : "dark");
+  }, [colorMode]);
+
+  return { colorMode, setColorMode, toggleColorMode };
 }
 
 export function useColorModeValue<T>(light: T, dark: T): T {
@@ -47,17 +66,35 @@ export function useColorModeValue<T>(light: T, dark: T): T {
   return colorMode === "dark" ? dark : light;
 }
 
+const noopSubscribe = () => () => {};
+
+/**
+ * True once the client has taken over from the server-rendered HTML.
+ * Uses the useSyncExternalStore "always false on the server, always true
+ * on the client" trick instead of a state+effect flag, since there's
+ * nothing to subscribe to — the value never changes back to false.
+ */
+function useHasMounted(): boolean {
+  return useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false
+  );
+}
+
 /**
  * Sun/moon icon button that flips between light and dark mode. Renders a
- * skeleton until the real theme is known client-side (next-themes
- * intentionally withholds `resolvedTheme` during SSR/first paint to avoid
- * a hydration mismatch) — no extra mount-tracking state needed, since
- * `resolvedTheme` itself already goes from undefined to a real value.
+ * skeleton until the client has mounted: the store's real value is already
+ * correct on the very first client render (no hydration risk either way,
+ * since useSyncExternalStore reconciles this safely on its own), but
+ * gating on mount avoids a one-frame flash of the wrong icon for users
+ * whose stored preference differs from the "light" server default.
  */
 export const ColorModeButton = (props: Omit<IconButtonProps, "aria-label">) => {
-  const { toggleColorMode, colorMode, resolvedTheme } = useColorMode();
+  const { toggleColorMode, colorMode } = useColorMode();
+  const hasMounted = useHasMounted();
 
-  if (!resolvedTheme) {
+  if (!hasMounted) {
     return <Skeleton boxSize="8" borderRadius="md" />;
   }
 

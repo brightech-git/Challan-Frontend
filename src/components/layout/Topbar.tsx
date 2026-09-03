@@ -15,10 +15,10 @@ export function Topbar() {
       px={6}
       py={3}
       borderBottomWidth="1px"
-      bg="bg.panel"
+      bg="bg.muted"
       gap={4}
     >
-      <ColorModeButton />
+      {/* <ColorModeButton /> */}
 
       <Menu.Root>
         <Menu.Trigger asChild>

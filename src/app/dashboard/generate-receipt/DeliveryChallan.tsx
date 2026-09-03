@@ -106,6 +106,8 @@ export default function DeliveryChallan({
   const to = tranWt.toCompanyDetails;
 
   const totalValue = tranWt.total ?? 0;
+  const roundedTotalValue = Math.round(totalValue);
+  const roundOff = roundedTotalValue - totalValue;
   const fonts = CHALLAN_FONT_SIZES[fontSize];
 
   return (
@@ -423,7 +425,7 @@ export default function DeliveryChallan({
         <div className="amount-words">
           <div className="section-label">Total Invoice amount in words</div>
 
-          <div className="words">{amountInWords(totalValue)}</div>
+          <div className="words">{amountInWords(roundedTotalValue)}</div>
         </div>
 
         <div className="amount-summary">
@@ -453,13 +455,16 @@ export default function DeliveryChallan({
           <div className="amount-line">
             <span>ROUND OFF</span>
 
-            <span>{money(0)}</span>
+            <span>
+              {roundOff === 0 ? "" : roundOff > 0 ? "+" : "-"}
+              {money(Math.abs(roundOff))}
+            </span>
           </div>
 
           <div className="amount-line final-total">
             <span>Total Value</span>
 
-            <span>{money(totalValue)}</span>
+            <span>{money(roundedTotalValue)}</span>
           </div>
         </div>
       </div>

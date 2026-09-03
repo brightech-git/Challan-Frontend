@@ -59,7 +59,7 @@ export function Sidebar() {
       transition="width 0.2s ease"
       flexShrink={0}
       borderRightWidth="1px"
-      bg="bg.panel"
+      bg="bg.muted"
       py={4}
       px={collapsed ? 2 : 3}
       display={{ base: "none", md: "block" }}

@@ -2,7 +2,7 @@
 
 import { Card, Heading, SimpleGrid, Text } from "@chakra-ui/react";
 import { LuBuilding2, LuFileText, LuGem, LuReceipt } from "react-icons/lu";
-import { useCompanies, useMetalMasts, useChallanFormats, useTranWts } from "@/hooks";
+import { useCompanies, useMetalMasts, useChallanFormats, useTranWts, useUsers } from "@/hooks";
 
 function StatCard({
   label,
@@ -35,7 +35,7 @@ function StatCard({
 export default function DashboardHomePage() {
   const companies = useCompanies();
   const metals = useMetalMasts();
-  const formats = useChallanFormats();
+  const users = useUsers();
   const tranWts = useTranWts();
 
   return (
@@ -56,8 +56,8 @@ export default function DashboardHomePage() {
           icon={<LuGem />}
         />
         <StatCard
-          label="Challan Formats"
-          value={formats.data?.length ?? (formats.isLoading ? "…" : 0)}
+          label="Users"
+          value={users.data?.length ?? (users.isLoading ? "…" : 0)}
           icon={<LuFileText />}
           accent="secondary"
         />

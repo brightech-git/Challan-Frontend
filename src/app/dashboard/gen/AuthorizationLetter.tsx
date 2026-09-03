@@ -227,7 +227,7 @@ export default function AuthorizationLetter({
             <span className="label-normal">gm.</span>
             <span className="label-normal" style={{ marginLeft: '6mm' }}>Cash :</span>
             <span className="value-underline">
-              {data.cashAmount ?? "______"}
+              {data.cashAmount != null ? Number(data.cashAmount).toFixed() : "______"}
             </span>
           </div>
 
