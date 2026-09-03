@@ -219,7 +219,6 @@ export default function AuthorizationLetter({
           <div className="detail-row-single">
             <span className="label-normal">Gold weight :</span>
             <span className="value-underline">
-           
             </span>
             <span className="label-normal">Ornaments weight :</span>
             <span className="value-underline">
