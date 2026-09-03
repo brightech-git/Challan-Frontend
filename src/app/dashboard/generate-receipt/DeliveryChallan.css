@@ -1,0 +1,700 @@
+/* =========================================================
+   FIXED A4 DELIVERY CHALLAN
+   ========================================================= */
+
+.challan-page {
+  width: 210mm;
+  height: 297mm;
+
+  min-width: 210mm;
+  max-width: 210mm;
+
+  min-height: 297mm;
+  max-height: 297mm;
+
+  box-sizing: border-box;
+
+  margin: 0 auto;
+  /* Top padding trimmed (was 5mm all round) to pull the logo/header up —
+     the outer page border removed below already gave a shadow-only edge on
+     screen, so there's no border line to leave a gap for anyway. */
+  padding: 2.5mm 5mm 0mm 5mm;
+
+  background: #ffffff;
+  color: #000000;
+
+  font-family: Arial, Helvetica, sans-serif;
+
+  font-size: var(--challan-title);
+  line-height: 1.3;
+
+  overflow: hidden;
+
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.challan-header {
+  width: 100%;
+}
+
+.challan-logo {
+  height: 19mm;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 4mm;
+
+  position: relative;
+}
+
+.logo-symbol {
+  height: 18mm;
+  width: 18mm;
+  border-radius: 9mm;
+
+  object-fit: contain;
+}
+
+.logo-name {
+  font-size: var(--challan-logo);
+
+  font-weight: bold;
+
+  letter-spacing: 0.5px;
+}
+
+.logo-subtitle {
+  font-size: var(--challan-logo-subtitle);
+
+  font-weight: bold;
+
+  text-align: center;
+
+  margin-top: 1px;
+}
+
+/* ---------------------------------------------------------
+   Title bar — CENTERING FIX (v2)
+   ---------------------------------------------------------
+   Neither line-height centering nor table-cell/vertical-align centering
+   inside a FIXED-height box survives html2canvas reliably: html2canvas
+   computes font metrics with its own text-rendering engine, not Chrome's,
+   so the rendered line-box height for the same font-size can come out
+   taller in the PDF capture than it does live. When that happens, ANY
+   centering technique inside a box whose height is pinned to 7mm still
+   gets clipped by the border, because the box itself never had room to
+   grow — the centering math was correct, but the container was too
+   short for what html2canvas decided the text needed.
+
+   The fix is to stop fixing the height entirely. No explicit height,
+   no min-height that content can outgrow — instead the box is sized by
+   EQUAL top/bottom padding and grows to fit whatever the text turns out
+   to need, in every renderer. Centering falls out for free (padding is
+   symmetric) and there's nothing for the text to overflow, so it can
+   never be clipped by the border, regardless of how tall html2canvas
+   decides the line box is.
+   ----------------------------------------------------------*/
+.challan-title {
+  border: 0.3mm solid #555555;
+  box-sizing: border-box;
+
+  width: 100%;
+
+  padding: 1.6mm 5mm;
+  text-align: center;
+  align-items: center;
+  align-content: center;
+  align-self: center;
+
+  font-size: var(--challan-title);
+  font-weight: bold;
+  line-height: 1.3;
+  text-align: center;
+
+  background: #eeeeee;
+}
+
+
+/* =========================================================
+   COMPANY SECTION
+   ========================================================= */
+
+.company-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  width: 100%;
+}
+
+.company-box {
+  border: 0.3mm solid #555555;
+
+  border-top: 0;
+
+  min-height: 34mm;
+
+  padding: 2.5mm;
+
+  box-sizing: border-box;
+}
+
+.company-box + .company-box {
+  border-left: 0;
+}
+
+.company-heading {
+  text-align: center;
+
+  font-weight: bold;
+
+  /* Match .challan-title exactly (not the smaller --challan-company size
+     used for the Company/Address/GST/PAN fields below it) so both shaded
+     header bars render with the same font size/weight. This is plain
+     centered text with no fixed-height/line-height trick, so it was never
+     affected by the html2canvas centering bug above. */
+  font-size: var(--challan-title);
+
+  margin: -2.5mm -2.5mm 2mm -2.5mm;
+  padding: 1.5mm 2.5mm;
+
+  background: #eeeeee;
+  border-bottom: 0.3mm solid #555555;
+}
+
+.company-details {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 1.2mm;
+
+  font-size: var(--challan-signature);
+
+  line-height: 1.3;
+}
+
+.company-details > div {
+  display: grid;
+
+  grid-template-columns: 24mm 1fr;
+  column-gap: 2mm;
+
+  align-items: start;
+}
+
+.label {
+  font-weight: bold;
+
+  display: flex;
+  justify-content:space-between;
+  align-items: baseline;
+}
+
+.label-text {
+  white-space: nowrap;
+}
+
+.label-colon {
+  padding-left: 1mm;
+}
+
+
+/* =========================================================
+   CHALLAN INFO
+   ========================================================= */
+
+.info-grid {
+  display: grid;
+
+  grid-template-columns: 1.5fr 1.5fr 1.5fr;
+
+  width: 100%;
+}
+
+.info-cell {
+  border: 0.3mm solid #555555;
+
+  border-top: 0;
+
+  min-height: 15mm;
+
+  padding: 2.5mm;
+
+  box-sizing: border-box;
+
+  font-size: var(--challan-signature);
+
+  line-height: 1.35;
+}
+
+.info-cell + .info-cell {
+  border-left: 0;
+}
+
+.info-row {
+  display: grid;
+
+  grid-template-columns: 21.5mm 1fr;
+  column-gap: 2mm;
+
+  align-items: start;
+
+  margin-bottom: 1.2mm;
+}
+
+.info-row:last-child {
+  margin-bottom: 0;
+}
+
+
+/* =========================================================
+   ITEM TABLE
+   ========================================================= */
+
+.items-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  border-spacing: 0;
+
+  table-layout: fixed;
+
+  font-size: var(--challan-title);
+}
+
+.items-table th,
+.items-table td {
+  border: 0.3mm solid #555555;
+
+  padding: 1.5mm 1.2mm;
+
+  vertical-align: top;
+
+  box-sizing: border-box;
+}
+
+.items-table th {
+  height: 8mm;
+
+  text-align: center;
+
+  vertical-align: middle;
+
+  font-weight: bold;
+
+  font-size: var(--challan-title);
+
+  line-height: 1.2;
+
+  background: #eeeeee;
+}
+
+
+/* =========================================================
+   TABLE COLUMN WIDTHS
+   ========================================================= */
+
+.items-table .col-sno {
+  width: 12mm;
+}
+
+.items-table .col-description {
+  width: 59mm;
+}
+
+.items-table .col-hsn {
+  width: 17mm;
+}
+
+.items-table .col-netwt {
+  width: 22mm;
+}
+
+.items-table .col-rate {
+  width: 22mm;
+}
+
+.items-table .col-value {
+  width: 28mm;
+}
+
+.items-table .col-total {
+  width: 28mm;
+}
+
+
+/* =========================================================
+   ITEM ROW
+   ========================================================= */
+
+.item-row {
+  height: 42mm;
+}
+
+.center {
+  text-align: center;
+}
+
+.right {
+  text-align: right;
+
+  white-space: nowrap;
+}
+
+.description-main {
+  font-weight: bold;
+
+  font-size: var(--challan-title);
+
+  margin-bottom: 1mm;
+
+  line-height: 1.25;
+}
+
+.description-sub {
+  font-size: var(--challan-signature);
+
+  margin-bottom: 2mm;
+
+  line-height: 1.25;
+}
+
+.weight-table {
+  border-collapse: collapse;
+
+  margin-top: 1mm;
+
+  font-size: var(--challan-title);
+}
+
+.weight-table th,
+.weight-table td {
+  border: 0.3mm solid #f7e9e9;
+
+  padding: 0.6mm 2mm;
+
+  text-align: center;
+
+  white-space: nowrap;
+}
+
+.weight-table th {
+  font-weight: bold;
+}
+
+.items-table tfoot td {
+  height: 7mm;
+
+  font-weight: bold;
+
+  vertical-align: middle;
+
+  font-size: var(--challan-title);
+}
+
+.total-label {
+  text-align: right;
+}
+
+
+/* =========================================================
+   AMOUNT SECTION
+   ========================================================= */
+
+.amount-grid {
+  display: grid;
+
+  grid-template-columns: 1.45fr 1fr;
+
+  width: 100%;
+}
+
+.amount-words {
+  min-height: 38mm;
+
+  border: 0.3mm solid #555555;
+
+  border-top: 0;
+
+  padding: 2.5mm;
+
+  box-sizing: border-box;
+}
+
+.amount-summary {
+  min-height: 38mm;
+
+  border: 0.3mm solid #555555;
+
+  border-top: 0;
+
+  border-left: 0;
+
+  padding: 2.5mm;
+
+  box-sizing: border-box;
+}
+
+.section-label {
+  font-size: var(--challan-title);
+
+  margin-bottom: 3mm;
+}
+
+.words {
+  font-size: var(--challan-title);
+  font-weight: bold;
+
+  line-height: 1.45;
+}
+
+.amount-line {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 5mm;
+
+  font-size: var(--challan-title);
+  font-weight: bold;
+
+  margin-bottom: 1.2mm;
+
+  line-height: 1.3;
+}
+
+.final-total {
+  border-top: 0.3mm solid #8b8585;
+
+  padding-top: 1.5mm;
+
+  margin-top: 1.5mm;
+
+  font-weight: bold;
+
+  font-size: var(--challan-title);
+}
+
+
+/* =========================================================
+   DECLARATION
+   ========================================================= */
+
+.declaration {
+  border: 0.3mm solid #555555;
+
+  border-top: 0;
+
+  padding: 2mm 2.5mm;
+
+  min-height: 28mm;
+
+  box-sizing: border-box;
+
+  font-size: var(--challan-signature);
+  font-weight: bold;
+
+  line-height: 1.35;
+}
+
+.declaration p {
+  margin: 0 0 1.2mm 0;
+}
+
+.declaration p:last-child {
+  margin-bottom: 0;
+}
+
+
+/* =========================================================
+   SIGNATURE SECTION
+   ========================================================= */
+
+.signature-grid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  width: 100%;
+}
+
+.signature-box {
+  border: 0.3mm solid #555555;
+
+  border-top: 0;
+
+  min-height: 39mm;
+
+  padding: 2.5mm;
+
+  box-sizing: border-box;
+}
+
+.signature-box + .signature-box {
+  border-left: 0;
+}
+
+.signature-title {
+  font-weight: bold;
+
+  font-size: var(--challan-signature);
+}
+
+.signature-space {
+  margin-top: 13mm;
+
+  font-size: var(--challan-signature);
+}
+
+.signature-line {
+  margin-top: 4mm;
+
+  font-size: var(--challan-signature);
+}
+
+.authorised {
+  margin-top: 4mm;
+
+  font-size: var(--challan-signature);
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.challan-footer {
+  min-height: 24mm;
+
+  border: 0.3mm solid #555555;
+
+  border-top: 0;
+
+  padding: 2.5mm;
+
+  display: grid;
+
+  grid-template-columns: 1fr 35mm;
+
+  box-sizing: border-box;
+
+  font-size: var(--challan-footer);
+
+  line-height: 1.45;
+}
+
+.footer-company {
+  line-height: 1.5;
+  
+}
+
+.footer-stamp {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+}
+
+.stamp-circle {
+  width: 20mm;
+
+  height: 20mm;
+
+  border: 1px solid #555555;
+
+  border-radius: 50%;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  text-align: center;
+
+  font-size: var(--challan-stamp);
+}
+
+
+/* =========================================================
+   SCREEN PREVIEW
+   ========================================================= */
+
+@media screen {
+  .challan-page {
+    box-shadow:
+      0 2px 12px rgba(0, 0, 0, 0.12);
+  }
+}
+
+
+/* =========================================================
+   PRINT
+   ========================================================= */
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+
+  html,
+  body {
+    width: 210mm !important;
+    height: 297mm !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    background: #ffffff !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #receipt-printable,
+  #receipt-printable * {
+    visibility: visible;
+  }
+
+  #receipt-printable {
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 210mm !important;
+    height: 297mm !important;
+
+    min-width: 210mm !important;
+    max-width: 210mm !important;
+
+    min-height: 297mm !important;
+    max-height: 297mm !important;
+
+    margin: 0 !important;
+
+    padding: 2.5mm 5mm 5mm 5mm !important;
+
+    box-shadow: none !important;
+
+    overflow: hidden !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
