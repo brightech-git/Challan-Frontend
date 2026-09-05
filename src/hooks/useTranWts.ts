@@ -12,6 +12,13 @@ export function useTranWts(search?: string) {
   });
 }
 
+export function useTranWtsByDateRange(fromDate: string, toDate: string) {
+  return useQuery({
+    queryKey: ["tranWts", "report", { fromDate, toDate }],
+    queryFn: () => tranWtService.getByDateRange(fromDate, toDate),
+  });
+}
+
 export function useTranWt(id: number | null) {
   return useQuery({
     queryKey: ["tranWts", id],

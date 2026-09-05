@@ -8,7 +8,6 @@ import {
   Field,
   Grid,
   GridItem,
-  Heading,
   HStack,
   Input,
   NativeSelect,
@@ -377,13 +376,6 @@ export default function TranWtPage() {
 
   return (
     <>
-      <HStack justify="space-between" mb={6}>
-        <Heading size="lg">Challan / Transactions</Heading>
-        <Button onClick={openCreate}>
-          <LuPlus /> New Transaction
-        </Button>
-      </HStack>
-
       <DataTable<TranWt>
         columns={columns}
         data={data}
@@ -395,6 +387,11 @@ export default function TranWtPage() {
         searchPlaceholder="Search transactions..."
         onEdit={openEdit}
         onDelete={handleDelete}
+        headerActions={
+          <Button size="sm" onClick={openCreate}>
+            <LuPlus /> New Transaction
+          </Button>
+        }
       />
 
       <Dialog.Root

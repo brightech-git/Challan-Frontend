@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge, Button, Dialog, Heading, HStack, Portal, Text, useDisclosure } from "@chakra-ui/react";
+import { Badge, Button, Dialog, Portal, Text, useDisclosure } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
 import { DataTable } from "@/components/table";
 import { ColumnConfig } from "@/components/table/types";
@@ -110,13 +110,6 @@ export default function ChallanFormatPage() {
 
   return (
     <>
-      <HStack justify="space-between" mb={6}>
-        <Heading size="lg">Challan Formats</Heading>
-        <Button onClick={openCreate}>
-          <LuPlus /> New Format
-        </Button>
-      </HStack>
-
       <DataTable<ChallanFormat>
         columns={columns}
         data={data}
@@ -125,6 +118,11 @@ export default function ChallanFormatPage() {
         error={error instanceof Error ? error.message : null}
         onEdit={openEdit}
         onDelete={handleDelete}
+        headerActions={
+          <Button size="sm" onClick={openCreate}>
+            <LuPlus /> New Format
+          </Button>
+        }
       />
 
       <Dialog.Root

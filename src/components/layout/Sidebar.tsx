@@ -6,35 +6,8 @@ import { useState } from "react";
 import { Box, IconButton, Stack, Text, chakra } from "@chakra-ui/react";
 
 const NavLink = chakra(NextLink);
-import {
-  LuBuilding2,
-  LuChevronLeft,
-  LuChevronRight,
-  LuFileText,
-  LuGem,
-  LuLayoutDashboard,
-  LuPrinter,
-  LuReceipt,
-  LuUsers,
-} from "react-icons/lu";
-import { IconType } from "react-icons";
-
-interface NavItem {
-  label: string;
-  href: string;
-  icon: IconType;
-}
-
-const navItems: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LuLayoutDashboard },
-  { label: "Users", href: "/dashboard/users", icon: LuUsers },
-  { label: "Company", href: "/dashboard/company", icon: LuBuilding2 },
-  { label: "Metal Master", href: "/dashboard/metal-master", icon: LuGem },
-  // { label: "Challan Format", href: "/dashboard/challan-format", icon: LuFileText },
-  { label: "Transactions", href: "/dashboard/tranwt", icon: LuReceipt },
-  { label: "Generate Receipt", href: "/dashboard/generate-receipt", icon: LuPrinter },
-  
-];
+import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
+import { isNavItemActive, navItems } from "./nav-items";
 
 const COLLAPSE_STORAGE_KEY = "sidebar-collapsed";
 
@@ -59,7 +32,9 @@ export function Sidebar() {
       transition="width 0.2s ease"
       flexShrink={0}
       borderRightWidth="1px"
-      bg="bg.muted"
+      borderRightColor="sidebar.border"
+      bg="sidebar.bg"
+      color="sidebar.fg"
       py={4}
       px={collapsed ? 2 : 3}
       display={{ base: "none", md: "block" }}
@@ -73,7 +48,7 @@ export function Sidebar() {
         mb={6}
       >
         {!collapsed && (
-          <Text fontWeight="bold" fontSize="lg">
+          <Text fontWeight="bold" fontSize="lg" color="sidebar.fg" letterSpacing="tight">
             Challan
           </Text>
         )}
@@ -82,6 +57,8 @@ export function Sidebar() {
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           size="sm"
           variant="ghost"
+          color="sidebar.fg"
+          _hover={{ bg: "sidebar.hoverBg" }}
           onClick={toggleCollapsed}
         >
           {collapsed ? <LuChevronRight size={16} /> : <LuChevronLeft size={16} />}
@@ -90,9 +67,7 @@ export function Sidebar() {
 
       <Stack gap={1}>
         {navItems.map((item) => {
-          const active =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const active = isNavItemActive(pathname, item.href);
           const Icon = item.icon;
 
           return (
@@ -104,14 +79,18 @@ export function Sidebar() {
               gap={3}
               justifyContent={collapsed ? "center" : "flex-start"}
               px={3}
-              py={2}
+              py={2.5}
               borderRadius="md"
               fontSize="sm"
               fontWeight="medium"
-              bg={active ? "colorPalette.subtle" : "transparent"}
-              color={active ? "colorPalette.fg" : "fg.default"}
-              colorPalette={active ? "brand" : undefined}
-              _hover={{ bg: active ? "colorPalette.subtle" : "bg.muted" }}
+              bg={active ? "sidebar.activeBg" : "transparent"}
+              color={active ? "sidebar.activeFg" : "sidebar.mutedFg"}
+              boxShadow={active ? "sm" : "none"}
+              _hover={{
+                bg: active ? "sidebar.activeBg" : "sidebar.hoverBg",
+                color: active ? "sidebar.activeFg" : "sidebar.fg",
+              }}
+              transition="background 0.15s ease, color 0.15s ease"
               title={collapsed ? item.label : undefined}
             >
               <Icon size={18} />

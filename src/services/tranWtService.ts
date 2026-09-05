@@ -13,6 +13,12 @@ export const tranWtService = {
     );
   },
 
+  getByDateRange(fromDate: string, toDate: string) {
+    return unwrap<TranWt[]>(
+      apiClient.get(TRAN_WT.GET_ALL, { params: { fromDate, toDate } })
+    );
+  },
+
   getById(id: number) {
     return unwrap<TranWt>(apiClient.get(TRAN_WT.GET_BY_ID(id)));
   },

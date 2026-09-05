@@ -22,9 +22,9 @@ export default function LoginPage() {
 
   return (
     <Center minH="100vh" bg="bg.subtle" px={4} position="relative">
-      <Box position="absolute" top={4} right={4}>
+      {/* <Box position="absolute" top={4} right={4}>
         <ColorModeButton />
-      </Box>
+      </Box> */}
 
       <Card.Root maxW="sm" w="full" boxShadow="lg">
         <Card.Body>

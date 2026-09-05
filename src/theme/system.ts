@@ -12,6 +12,10 @@ import { brandColors, secondaryColors } from "./colors";
  *   theme-aware (light/dark) alias for the two brand colors, so app chrome
  *   (links, active nav state, focus rings) can reference "brand.solid"-ish
  *   colors without hardcoding a light/dark check anywhere.
+ * - `sidebar.*` / `topbar.*` / `pageBg` semantic tokens drive the app
+ *   chrome (Sidebar.tsx, Topbar.tsx, dashboard/layout.tsx) so the whole
+ *   shell reads as branded/colorful instead of flat white, while still
+ *   responding correctly to light/dark mode.
  * - Button and Badge recipes default to colorPalette="brand" so a plain
  *   <Button> already matches the brand without callers passing colorPalette
  *   everywhere — pass colorPalette="secondary" (or any built-in palette)
@@ -52,6 +56,60 @@ const config = defineConfig({
         },
         secondaryBrand: {
           value: { _light: "{colors.secondary.600}", _dark: "{colors.secondary.400}" },
+        },
+
+        // --- App chrome (sidebar / topbar / page background) ---
+        // Bold colored shell: a solid deep-navy sidebar in both modes (it's
+        // already dark, so light/dark mode only changes how dark), with a
+        // slightly lighter "active" tint and a subtle hover tint on top.
+        "sidebar.bg": {
+          value: { _light: "{colors.brand.950}", _dark: "{colors.brand.950}" },
+        },
+        "sidebar.fg": {
+          value: { _light: "{colors.brand.50}", _dark: "{colors.brand.50}" },
+        },
+        "sidebar.mutedFg": {
+          value: { _light: "{colors.brand.200}", _dark: "{colors.brand.300}" },
+        },
+        "sidebar.border": {
+          value: { _light: "{colors.brand.900}", _dark: "{colors.brand.900}" },
+        },
+        "sidebar.activeBg": {
+          value: { _light: "{colors.brand.600}", _dark: "{colors.brand.600}" },
+        },
+        "sidebar.activeFg": {
+          value: { _light: "white", _dark: "white" },
+        },
+        "sidebar.hoverBg": {
+          value: { _light: "{colors.brand.900}", _dark: "{colors.brand.900}" },
+        },
+
+        // Solid brand-blue bar, one shade lighter than the sidebar's deep
+        // navy so the two are still visually distinct (not one fused block)
+        // while both read as clearly "colored" rather than white.
+        "topbar.bg": {
+          value: { _light: "{colors.brand.600}", _dark: "{colors.brand.700}" },
+        },
+        "topbar.fg": {
+          value: { _light: "white", _dark: "white" },
+        },
+        "topbar.mutedFg": {
+          value: { _light: "{colors.brand.100}", _dark: "{colors.brand.200}" },
+        },
+        "topbar.border": {
+          value: { _light: "{colors.brand.700}", _dark: "{colors.brand.900}" },
+        },
+        "topbar.hoverBg": {
+          value: { _light: "{colors.brand.500}", _dark: "{colors.brand.600}" },
+        },
+        "topbar.accent": {
+          value: { _light: "{colors.brand.300}", _dark: "{colors.brand.300}" },
+        },
+
+        // Soft brand-tinted wash behind the main content area, instead of
+        // a flat white/black page background.
+        pageBg: {
+          value: { _light: "{colors.brand.50}", _dark: "{colors.gray.950}" },
         },
       },
     },

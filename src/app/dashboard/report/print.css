@@ -1,0 +1,121 @@
+/* print.css — styling for the hidden #report-print-table, shown only under
+   @media print. Palette matches the PDF/Excel exports and the app's brand
+   theme (src/theme/colors.ts: brand.600 #2563eb header, brand.50/100 tints,
+   brand.900 for text accents) so all outputs read as one consistent report. */
+
+.report-print-only {
+  display: none;
+}
+
+.report-print-table-el {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 10px;
+}
+
+.report-print-table-el thead {
+  display: table-header-group; /* repeat header row on every printed page */
+}
+
+.report-print-table-el tfoot {
+  display: table-footer-group; /* repeat totals row on every printed page */
+}
+
+.report-print-table-el th {
+  background: #2563eb;
+  color: #ffffff;
+  text-align: left;
+  padding: 6px 8px;
+  border: 1px solid #2563eb;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.report-print-table-el td {
+  padding: 5px 8px;
+  border: 1px solid #bed0f9;
+}
+
+.report-print-table-el tbody tr:nth-child(even) td {
+  background: #f2f6fe;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.report-print-table-el tfoot td {
+  background: #e0e9fc;
+  font-weight: bold;
+  border-top: 2px solid #2563eb;
+  color: #112e6c;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.report-print-table-el .align-right {
+  text-align: right;
+}
+
+.report-print-title {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 4px;
+  color: #112e6c;
+}
+
+.report-print-subtitle {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 11px;
+  color: #444444;
+  margin-bottom: 12px;
+}
+
+.report-print-meta {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9px;
+  color: #777777;
+  margin-bottom: 10px;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 12mm 10mm 16mm 10mm;
+
+  /* Running page-number footer. Supported in Chrome/Edge print preview and
+     when printing to PDF; unsupported browsers simply omit it. */
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8px;
+    color: #777777;
+  }
+
+  /* NOTE: @page margin-box `content` only supports string literals and a
+     small set of counters — it cannot read a DOM attribute reliably across
+     browsers, so the "Generated on" timestamp is rendered inside the page
+     body instead (see .report-print-meta) rather than here. */
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #report-print-table,
+  #report-print-table * {
+    visibility: visible;
+  }
+
+  #report-print-table {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

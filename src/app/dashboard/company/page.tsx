@@ -1,15 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Badge,
-  Button,
-  Dialog,
-  Heading,
-  HStack,
-  Portal,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Badge, Button, Dialog, Portal, useDisclosure } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
 import { DataTable } from "@/components/table";
 import { ColumnConfig } from "@/components/table/types";
@@ -139,13 +131,6 @@ export default function CompanyPage() {
 
   return (
     <>
-      <HStack justify="space-between" mb={6}>
-        <Heading size="lg">Company</Heading>
-        <Button colorPalette="blue" onClick={openCreate}>
-          <LuPlus /> New Company
-        </Button>
-      </HStack>
-
       <DataTable<Company>
         columns={columns}
         data={data}
@@ -157,6 +142,11 @@ export default function CompanyPage() {
         searchPlaceholder="Search companies..."
         onEdit={openEdit}
         onDelete={handleDelete}
+        headerActions={
+          <Button size="sm" onClick={openCreate}>
+            <LuPlus /> New Company
+          </Button>
+        }
       />
 
       <Dialog.Root

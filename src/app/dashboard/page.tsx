@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, Heading, SimpleGrid, Text } from "@chakra-ui/react";
+import { Card, Flex, Heading, SimpleGrid, Text } from "@chakra-ui/react";
 import { LuBuilding2, LuFileText, LuGem, LuReceipt } from "react-icons/lu";
 import { useCompanies, useMetalMasts, useChallanFormats, useTranWts, useUsers } from "@/hooks";
 
@@ -16,15 +16,35 @@ function StatCard({
   accent?: "brand" | "secondary";
 }) {
   return (
-    <Card.Root borderTopWidth="3px" borderTopColor={`${accent}.600`}>
+    <Card.Root
+      borderWidth="1px"
+      borderColor={`${accent}.100`}
+      bg={`${accent}.50`}
+      _dark={{ bg: "gray.900", borderColor: `${accent}.800` }}
+      overflow="hidden"
+      transition="transform 0.15s ease, box-shadow 0.15s ease"
+      _hover={{ transform: "translateY(-2px)", boxShadow: "md" }}
+    >
       <Card.Body>
-        <Text color="fg.muted" fontSize="sm" mb={2}>
-          {label}
-        </Text>
-        <Heading size="2xl" display="flex" alignItems="center" gap={3}>
-          <Text as="span" color={`${accent}.600`} display="inline-flex">
-            {icon}
+        <Flex align="center" justify="space-between" mb={3}>
+          <Text color="fg.muted" fontSize="sm" fontWeight="medium">
+            {label}
           </Text>
+          <Flex
+            align="center"
+            justify="center"
+            w="40px"
+            h="40px"
+            borderRadius="lg"
+            bg={`${accent}.600`}
+            color="white"
+            fontSize="lg"
+            boxShadow="sm"
+          >
+            {icon}
+          </Flex>
+        </Flex>
+        <Heading size="2xl" color={`${accent}.700`} _dark={{ color: `${accent}.300` }}>
           {value}
         </Heading>
       </Card.Body>
@@ -40,7 +60,7 @@ export default function DashboardHomePage() {
 
   return (
     <>
-      <Heading size="lg" mb={6}>
+      <Heading size="lg" mb={6} color="fg.default">
         Overview
       </Heading>
 

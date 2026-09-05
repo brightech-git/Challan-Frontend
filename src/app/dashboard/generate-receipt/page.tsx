@@ -4,7 +4,6 @@ import { useMemo, useRef, useState } from "react";
 import {
   Box,
   Center,
-  Heading,
   HStack,
   IconButton,
   Image,
@@ -18,7 +17,7 @@ import { LuDownload, LuPrinter } from "react-icons/lu";
 import { useTranWt, useTranWts } from "@/hooks";
 import { amountInWords } from "@/lib/numberToWords";
 import DeliveryChallan from "./DeliveryChallan";
-import AuthorizationLetter from "../gen/AuthorizationLetter";
+import AuthorizationLetter from "./AuthorizationLetter";
 
 type DocumentType = "delivery-challan" | "authorization-letter";
 
@@ -105,13 +104,39 @@ export default function GenerateReceiptPage() {
       height: node.scrollHeight,
       windowWidth: node.scrollWidth,
       windowHeight: node.scrollHeight,
-      onclone: (document) => {
-        const clonedElement = document.getElementById(node.id || 'receipt-printable');
+      onclone: (clonedDoc) => {
+        const clonedElement = clonedDoc.getElementById(node.id || 'receipt-printable');
         if (clonedElement) {
           clonedElement.style.display = 'block';
           clonedElement.style.visibility = 'visible';
           clonedElement.style.opacity = '1';
         }
+
+        // html2canvas draws the .fill-line-bold border-bottom through the
+        // middle of the text instead of underneath it — a known html2canvas
+        // font-metrics quirk that only shows up here because these spans
+        // sit inline in flowing paragraph text and can wrap across lines
+        // (see the note in DeliveryChallan.css about its line-height
+        // computation differing from a real browser's). Print/screen render
+        // the real border correctly; only the rasterized clone needs the
+        // swap to a native text-decoration underline.
+        //
+        // .value-underline (Gold/Ornaments weight, Cash, Words, Invoice No)
+        // is deliberately NOT touched here — those sit in a single-line flex
+        // row that never wraps, so their border-bottom never had this bug,
+        // and text-decoration would just shrink their padded box-underline
+        // look down to hug the bare text instead of matching print.
+        //
+        // Only swap elements that actually hold text — an *empty* blank
+        // has nothing for text-decoration to underline, so it would render
+        // with no line at all; its border-bottom never collided with any
+        // glyphs in the first place, so it's left alone.
+        clonedElement?.querySelectorAll<HTMLElement>(".fill-line-bold").forEach((el) => {
+          if (!el.textContent || !el.textContent.trim()) return;
+          el.style.borderBottom = "none";
+          el.style.textDecoration = "underline";
+          el.style.textUnderlineOffset = "3px";
+        });
       }
     });
 
@@ -171,12 +196,9 @@ export default function GenerateReceiptPage() {
       >
         <HStack gap={3}>
           <Image src="/icon.png" alt="Challan logo" boxSize="44px" borderRadius="md" />
-          <Box>
-            <Heading size="lg">Generate Document</Heading>
-            <Text fontSize="sm" color="fg.muted">
-              Generate Delivery Challan or Authorization Letter
-            </Text>
-          </Box>
+          <Text fontSize="sm" color="fg.muted">
+            Generate Delivery Challan or Authorization Letter
+          </Text>
         </HStack>
       </HStack>
 

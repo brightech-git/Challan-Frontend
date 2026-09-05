@@ -1,15 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Badge,
-  Button,
-  Dialog,
-  Heading,
-  HStack,
-  Portal,
-  useDisclosure,
-} from "@chakra-ui/react";
+import { Badge, Button, Dialog, Portal, useDisclosure } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
 import { DataTable } from "@/components/table";
 import { ColumnConfig } from "@/components/table/types";
@@ -119,13 +111,6 @@ export default function UsersPage() {
 
   return (
     <>
-      <HStack justify="space-between" mb={6}>
-        <Heading size="lg">Users</Heading>
-        <Button onClick={openCreate}>
-          <LuPlus /> New User
-        </Button>
-      </HStack>
-
       <DataTable<UserMaster>
         columns={columns}
         data={data}
@@ -137,6 +122,11 @@ export default function UsersPage() {
         searchPlaceholder="Search users..."
         onEdit={openEdit}
         onDelete={handleDelete}
+        headerActions={
+          <Button size="sm" onClick={openCreate}>
+            <LuPlus /> New User
+          </Button>
+        }
       />
 
       <Dialog.Root

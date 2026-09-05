@@ -31,6 +31,8 @@ export interface DataTableProps<T> {
   /** Max height of the scrollable body; header stays pinned. Default 520px. */
   maxHeight?: number | string;
   extraActions?: (row: T) => ReactNode;
+  /** Rendered on the right of the search row (e.g. a "New X" button). Shows even without a search box. */
+  headerActions?: ReactNode;
 }
 
 /**
@@ -57,6 +59,7 @@ export function DataTable<T>({
   onDelete,
   maxHeight = 520,
   extraActions,
+  headerActions,
 }: DataTableProps<T>) {
   const [widths, setWidths] = useState<Record<string, number>>(() =>
     Object.fromEntries(columns.map((c) => [c.key, c.width ?? 160]))
@@ -93,24 +96,43 @@ export function DataTable<T>({
   const rows = useMemo(() => data ?? [], [data]);
 
   return (
-    <Box borderWidth="1px" borderRadius="lg" overflow="hidden" bg="bg.panel">
-      {onSearchChange && (
-        <Box p={3} borderBottomWidth="1px">
-          <InputGroup maxW="320px" startElement={<LuSearch />}>
-            <Input
-              value={searchValue ?? ""}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder={searchPlaceholder}
-              size="sm"
-            />
-          </InputGroup>
-        </Box>
+    <Box borderWidth="1px" borderColor="brand.100" _dark={{ borderColor: "brand.900" }} borderRadius="lg" overflow="hidden" bg="bg.panel" boxShadow="sm">
+      {(onSearchChange || headerActions) && (
+        <HStack
+          justify="space-between"
+          wrap="wrap"
+          gap={3}
+          p={3}
+          borderBottomWidth="1px"
+          borderBottomColor="brand.100"
+          bg="brand.50"
+          _dark={{ borderBottomColor: "brand.900", bg: "gray.900" }}
+        >
+          {onSearchChange ? (
+            <InputGroup maxW="320px" startElement={<LuSearch />}>
+              <Input
+                value={searchValue ?? ""}
+                onChange={(e) => onSearchChange(e.target.value)}
+                placeholder={searchPlaceholder}
+                size="sm"
+                bg="bg.panel"
+              />
+            </InputGroup>
+          ) : (
+            <Box />
+          )}
+          {headerActions}
+        </HStack>
       )}
 
       <Box overflowX="auto" overflowY="auto" maxHeight={maxHeight}>
         <Table.Root size="sm" style={{ tableLayout: "fixed", minWidth: "100%" }}>
-          <Table.Header position="sticky" top={0} zIndex={1} bg="bg.subtle">
-            <Table.Row>
+          <Table.Header position="sticky" top={0} zIndex={1}>
+            {/* The "line" variant's row recipe sets an opaque `bg: "bg"` on
+                every Table.Row (header row included), which paints over
+                Table.Header's background and hides the white header text.
+                Setting bg directly on this row overrides that. */}
+            <Table.Row bg="brand.600" _dark={{ bg: "brand.800" }}>
               {columns.map((col) => (
                 <Table.ColumnHeader
                   key={col.key}
@@ -118,6 +140,8 @@ export function DataTable<T>({
                   style={{ width: widths[col.key] }}
                   textAlign={col.align}
                   userSelect="none"
+                  color="white"
+                  fontWeight="semibold"
                 >
                   <Box overflow="hidden" textOverflow="ellipsis" whiteSpace="nowrap">
                     {col.header}
@@ -130,12 +154,12 @@ export function DataTable<T>({
                     height="100%"
                     width="6px"
                     cursor="col-resize"
-                    _hover={{ bg: "border.emphasized" }}
+                    _hover={{ bg: "whiteAlpha.500" }}
                   />
                 </Table.ColumnHeader>
               ))}
               {hasActions && (
-                <Table.ColumnHeader width="120px" textAlign="right">
+                <Table.ColumnHeader width="120px" textAlign="right" color="white" fontWeight="semibold">
                   Actions
                 </Table.ColumnHeader>
               )}
@@ -176,7 +200,10 @@ export function DataTable<T>({
             {!isLoading &&
               !error &&
               rows.map((row) => (
-                <Table.Row key={rowKey(row)}>
+                <Table.Row
+                  key={rowKey(row)}
+                  _hover={{ bg: "brand.50", _dark: { bg: "gray.800" } }}
+                >
                   {columns.map((col) => (
                     <Table.Cell
                       key={col.key}
