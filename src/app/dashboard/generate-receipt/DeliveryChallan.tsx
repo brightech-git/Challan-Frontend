@@ -1,565 +1,68 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useMemo, type RefObject } from "react";
+import { Center, Spinner, Text } from "@chakra-ui/react";
 import type { TranWt } from "@/types";
-import { amountInWords } from "@/lib/numberToWords";
-import "./DeliveryChallan.css";
+import { useChallanFormat } from "@/hooks";
+import { injectTemplateData } from "./challanTemplate";
+
+type ChallanFontSize = "small" | "medium" | "large";
 
 interface DeliveryChallanProps {
   tranWt: TranWt;
-  printRef: RefObject<HTMLDivElement | null>;
+  printRef: RefObject<HTMLIFrameElement | null>;
   fontSize?: ChallanFontSize;
 }
 
-const money = (n: number | null | undefined) =>
-  (n ?? 0).toLocaleString("en-IN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-const CHALLAN_FONT_SIZES = {
-  small: {
-    base: "9px",
-    company: "8.5px",
-    info: "8.5px",
-    table: "8px",
-    tableHeader: "8px",
-    description: "8px",
-    descriptionSub: "7.5px",
-    weight: "7.5px",
-    amount: "8px",
-    words: "8px",
-    declaration: "7px",
-    signature: "8px",
-    footer: "7px",
-    stamp: "6px",
-    title: "10px",
-    logo: "15px",
-    logoSubtitle: "7px",
-  },
-
-  medium: {
-    base: "10px",
-    company: "10px",
-    info: "10px",
-    table: "9.5px",
-    tableHeader: "9.5px",
-    description: "9.5px",
-    descriptionSub: "9px",
-    weight: "8.5px",
-    amount: "9.5px",
-    words: "9.5px",
-    declaration: "8px",
-    signature: "9px",
-    footer: "8px",
-    stamp: "7px",
-    title: "11px",
-    logo: "16px",
-    logoSubtitle: "8px",
-  },
-
-  large: {
-    base: "14px",
-    company: "13px",
-    info: "13px",
-    table: "13px",
-    tableHeader: "13px",
-    description: "13px",
-    descriptionSub: "12px",
-    weight: "12px",
-    amount: "13px",
-    words: "13px",
-    declaration: "11px",
-    signature: "12px",
-    footer: "11px",
-    stamp: "10px",
-    title: "14px",
-    logo: "19px",
-    logoSubtitle: "11px",
-  },
-} as const;
-
-type ChallanFontSize = keyof typeof CHALLAN_FONT_SIZES;
-
-const weight = (n: number | null | undefined) =>
-  (n ?? 0).toLocaleString("en-IN", {
-    minimumFractionDigits: 3,
-    maximumFractionDigits: 3,
-  });
-
-const dateFormat = (date: string | Date | null | undefined) => {
-  if (!date) return "—";
-
-  return new Date(date).toLocaleDateString("en-IN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-};
-
-const shortName = (name: string | null | undefined) =>
-  name ? name.split("-")[0].trim() : null;
+const DELIVERY_FORM_TEMPLATE_ID = "DELIVERYFORM";
 
 export default function DeliveryChallan({
   tranWt,
   printRef,
   fontSize = "large",
 }: DeliveryChallanProps) {
-  const from = tranWt.fromCompanyDetails;
-  const to = tranWt.toCompanyDetails;
+  const { data: format, isLoading, isError } = useChallanFormat(
+    DELIVERY_FORM_TEMPLATE_ID
+  );
 
-  const totalValue = tranWt.total ?? 0;
-  const roundedTotalValue = Math.round(totalValue);
-  const roundOff = roundedTotalValue - totalValue;
-  const fonts = CHALLAN_FONT_SIZES[fontSize];
+  const srcDoc = useMemo(() => {
+    if (!format?.content) return null;
+    return injectTemplateData(
+      format.content,
+      { ...tranWt, fontSize },
+      { varName: "tranWt", logoClass: "logo-symbol" }
+    );
+  }, [format?.content, tranWt, fontSize]);
+
+  if (isLoading) {
+    return (
+      <Center py={12} className="no-print">
+        <Spinner size="lg" />
+      </Center>
+    );
+  }
+
+  if (isError || !srcDoc) {
+    return (
+      <Text color="fg.error" className="no-print">
+        Couldn&apos;t load the delivery challan template.
+      </Text>
+    );
+  }
 
   return (
-    <div
-      id="receipt-printable"
+    <iframe
       ref={printRef}
-      className="challan-page"
-      style={
-        {
-          "--challan-base": fonts.base,
-          "--challan-company": fonts.company,
-          "--challan-info": fonts.info,
-          "--challan-table": fonts.table,
-          "--challan-table-header": fonts.tableHeader,
-          "--challan-description": fonts.description,
-          "--challan-description-sub": fonts.descriptionSub,
-          "--challan-weight": fonts.weight,
-          "--challan-amount": fonts.amount,
-          "--challan-words": fonts.words,
-          "--challan-declaration": fonts.declaration,
-          "--challan-signature": fonts.signature,
-          "--challan-footer": fonts.footer,
-          "--challan-stamp": fonts.stamp,
-          "--challan-title": fonts.title,
-          "--challan-logo": fonts.logo,
-          "--challan-logo-subtitle": fonts.logoSubtitle,
-        } as React.CSSProperties
-      }
-    >
-      {/* =========================================================
-          HEADER
-      ========================================================= */}
-
-      <div className="challan-header">
-        <div className="challan-logo">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/icon.png" alt="" className="logo-symbol" />
-
-          <div>
-            <div className="logo-name">
-              {shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "LAXMI JEWELLERY"}
-            </div>
-
-            <div className="logo-subtitle">
-              {tranWt.header1 || "\u00a0"}
-            </div>
-          </div>
-        </div>
-
-        {/* No fixed height on this box — see .challan-title in the CSS.
-            Equal top/bottom padding centers the text and lets the box
-            grow to fit it, so html2canvas can never clip it against a
-            border, unlike a fixed-height box combined with line-height
-            or table-cell centering. */}
-        <div className="challan-title" style={{ fontSize: fonts.title }}>
-          {tranWt.header2 || "\u00a0"}
-        </div>
-      </div>
-
-      {/* =========================================================
-          DISPATCH TO / DISPATCH FROM
-      ========================================================= */}
-
-      <div className="company-grid">
-        {/* DISPATCH TO */}
-
-        <div className="company-box">
-          <div className="company-heading" style={{ fontSize: fonts.title }}>
-            Dispatch To
-          </div>
-
-          <div className="company-details">
-            <div>
-              <span className="label">
-                <span className="label-text">Company</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>{shortName(to?.companyName) ?? tranWt.toCompanyId ?? "—"}</span>
-            </div>
-
-            <div>
-              <span className="label">
-                <span className="label-text">Address</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>
-                {[to?.address1, to?.address2].filter(Boolean).join(", ") || "—"}
-              </span>
-            </div>
-
-            <div>
-              <span className="label">
-                <span className="label-text">GST No</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>{to?.gstNo ?? "—"}</span>
-            </div>
-
-            <div>
-              <span className="label">
-                <span className="label-text">PAN No</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>{to?.panNo ?? "—"}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* DISPATCH FROM */}
-
-        <div className="company-box">
-          <div className="company-heading" style={{ fontSize: fonts.title }}>
-            Dispatch From
-          </div>
-
-          <div className="company-details">
-            <div>
-              <span className="label">
-                <span className="label-text">Company</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>{shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "—"}</span>
-            </div>
-
-            <div>
-              <span className="label">
-                <span className="label-text">Address</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>
-                {[from?.address1, from?.address2].filter(Boolean).join(", ") ||
-                  "—"}
-              </span>
-            </div>
-
-            <div>
-              <span className="label">
-                <span className="label-text">GST No</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>{from?.gstNo ?? "—"}</span>
-            </div>
-
-            <div>
-              <span className="label">
-                <span className="label-text">PAN No</span>
-                <span className="label-colon">:</span>
-              </span>
-              <span>{from?.panNo ?? "—"}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* =========================================================
-          FROM COMPANY ADDITIONAL INFORMATION
-      ========================================================= */}
-
-      <div className="info-grid">
-        {/* FROM COMPANY - LEFT */}
-
-        <div className="info-cell from-company-info">
-          <div className="info-row">
-            <span className="label">
-              <span className="label-text">PAN No</span>
-              <span className="label-colon">:</span>
-            </span>
-
-            <span>{from?.panNo ?? "—"}</span>
-          </div>
-
-          <div className="info-row">
-            <span className="label">
-              <span className="label-text">State / Code</span>
-              <span className="label-colon">:</span>
-            </span>
-
-            <span>{from?.stateId ?? "—"}</span>
-          </div>
-        </div>
-
-        {/* FROM COMPANY - MIDDLE */}
-
-        <div className="info-cell from-company-info">
-          <div className="info-row">
-            <span className="label">
-              <span className="label-text">GST No</span>
-              <span className="label-colon">:</span>
-            </span>
-
-            <span>{from?.gstNo ?? "—"}</span>
-          </div>
-
-          <div className="info-row">
-            <span className="label">
-              <span className="label-text">Email Id</span>
-              <span className="label-colon">:</span>
-            </span>
-
-            <span>{from?.email ?? "—"}</span>
-          </div>
-        </div>
-
-        {/* DELIVERY CHALLAN - RIGHT */}
-
-        <div className="info-cell challan-info">
-          <div className="info-row">
-            <span className="label">
-              <span className="label-text">Challan No</span>
-              <span className="label-colon">:</span>
-            </span>
-
-            <span>{tranWt.id ?? "—"}</span>
-          </div>
-
-          <div className="info-row">
-            <span className="label">
-              <span className="label-text">Date</span>
-              <span className="label-colon">:</span>
-            </span>
-
-            <span>{dateFormat(tranWt.tranDate)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* =========================================================
-          ITEM TABLE
-      ========================================================= */}
-
-      <table className="items-table">
-        <colgroup>
-          <col className="col-sno" />
-          <col className="col-description" />
-          <col className="col-hsn" />
-          <col className="col-netwt" />
-          <col className="col-rate" />
-          <col className="col-value" />
-          <col className="col-total" />
-        </colgroup>
-
-        <thead>
-          <tr>
-            <th>S.No</th>
-            <th>DESCRIPTION</th>
-            <th>HSN</th>
-            <th>NETWT</th>
-            <th>RATE</th>
-            <th>VALUE</th>
-            <th>TOTAL</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          <tr className="item-row">
-            <td className="center">1</td>
-
-            <td>
-              <div className="description-main">
-                {tranWt.metalName ?? tranWt.metalId ?? "GOLD"} ORNAMENT
-              </div>
-
-              {tranWt.description && (
-                <div className="description-sub">{tranWt.description}</div>
-              )}
-
-              <table className="weight-table">
-                <thead>
-                  <tr>
-                    <th>Grs Wt</th>
-                    <th>Stn Wt</th>
-                    <th>Net Wt</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>{weight(tranWt.grsWt)}</td>
-                    <td>{weight(tranWt.stnWt)}</td>
-                    <td>{weight(tranWt.netWt)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </td>
-
-            <td className="center">{tranWt.hsnCode ?? "—"}</td>
-
-            <td className="right">{weight(tranWt.netWt)}</td>
-
-            <td className="right">{money(tranWt.rate)}</td>
-
-            <td className="right">{money(tranWt.value)}</td>
-
-            <td className="right">{money(totalValue)}</td>
-          </tr>
-        </tbody>
-
-        <tfoot>
-          <tr>
-            <td colSpan={5} className="total-label">
-              Total
-            </td>
-
-            <td className="right">{money(tranWt.value)}</td>
-
-            <td className="right">{money(totalValue)}</td>
-          </tr>
-        </tfoot>
-      </table>
-
-      {/* =========================================================
-          TOTAL AMOUNT + GST
-      ========================================================= */}
-
-      <div className="amount-grid">
-        <div className="amount-words">
-          <div className="section-label">Total Invoice amount in words</div>
-
-          <div className="words">{amountInWords(roundedTotalValue)}</div>
-        </div>
-
-        <div className="amount-summary">
-          <div className="amount-line">
-            <span>Total Amount</span>
-            <span>{money(tranWt.value)}</span>
-          </div>
-
-          {!!tranWt.csstAmt && (
-            <div className="amount-line">
-              <span>CGST {tranWt.cgstPer ?? 0}%</span>
-              <span>{money(tranWt.csstAmt)}</span>
-            </div>
-          )}
-
-          {!!tranWt.sgstAmt && (
-            <div className="amount-line">
-              <span>SGST {tranWt.sgstPer ?? 0}%</span>
-              <span>{money(tranWt.sgstAmt)}</span>
-            </div>
-          )}
-
-          {!!tranWt.igstAmt && (
-            <div className="amount-line">
-              <span>IGST {tranWt.igstPer ?? 0}%</span>
-              <span>{money(tranWt.igstAmt)}</span>
-            </div>
-          )}
-
-          {roundOff !== 0 && (
-            <div className="amount-line">
-              <span>ROUND OFF</span>
-              <span>
-                {roundOff > 0 ? "+" : "-"}
-                {money(Math.abs(roundOff))}
-              </span>
-            </div>
-          )}
-
-          <div className="amount-line final-total">
-            <span>Total Value</span>
-
-            <span>{money(roundedTotalValue)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* =========================================================
-          DECLARATION
-      ========================================================= */}
-
-      <div className="declaration">
-        <p>
-          Items listed in this invoice / delivery challan are solely for
-          commercial transactions. There is no political affiliation or
-          intension to support any political entity or campaign associated with
-          the movement of these goods.
-        </p>
-
-        <p>
-          Goods (Jewellery) sent on approval basis as per circular
-          10/10/2017-GST vide Rule 55 sub rule (1) Clause (C) and sub rule (4)
-          of the CGST Act 2017.
-        </p>
-
-        <p>
-          No. of E-way bill is required to be generated as the Goods covered
-          under this document are sent on approval basis.
-        </p>
-
-        <p>E. &amp; O.E. • Terms &amp; Conditions Signature</p>
-
-        <p>• THIS GOODS ARE SEND FOR APPROVAL</p>
-      </div>
-
-      {/* =========================================================
-          SIGNATURE SECTION
-      ========================================================= */}
-
-      <div className="signature-grid">
-        <div className="signature-box">
-          <div className="signature-title">Received By</div>
-
-          <div className="signature-space">
-            Name : {shortName(to?.companyName) ?? tranWt.toCompanyId ?? "—"}
-          </div>
-
-          <div className="signature-line">Signed Signature</div>
-        </div>
-
-        <div className="signature-box right-signature">
-          <div className="signature-title">
-            For {shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "—"}
-          </div>
-
-          <div className="signature-space">
-            <br />
-            <br />
-          </div>
-
-          <div className="authorised">Director / Authorised Signatory</div>
-        </div>
-      </div>
-
-      {/* =========================================================
-          FOOTER
-      ========================================================= */}
-
-      <div className="challan-footer">
-        <div className="footer-company">
-          <strong>
-            {shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "Company Name"}
-          </strong>
-
-          <div>
-            Address :{" "}
-            {[from?.address1, from?.address2, from?.address3, from?.address4]
-              .filter(Boolean)
-              .join(", ") || "—"}
-          </div>
-
-          <div>
-            Phone : {from?.phone ?? "—"} &nbsp;&nbsp; GSTIN :{" "}
-            {from?.gstNo ?? "—"}
-          </div>
-        </div>
-
-        {/* <div className="footer-stamp">
-          <div className="stamp-circle">COMPANY</div>
-        </div> */}
-      </div>
-    </div>
+      title="Delivery Challan"
+      srcDoc={srcDoc}
+      style={{
+        width: "210mm",
+        height: "calc(297mm + 40px)",
+        border: "none",
+        display: "block",
+        margin: "0 auto",
+        background: "#fff",
+      }}
+    />
   );
 }

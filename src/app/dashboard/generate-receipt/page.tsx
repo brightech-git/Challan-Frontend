@@ -26,8 +26,8 @@ export default function GenerateReceiptPage() {
   const [documentType, setDocumentType] = useState<DocumentType>("delivery-challan");
   const [isDownloading, setIsDownloading] = useState(false);
   
-  const printRef = useRef<HTMLDivElement>(null);
-  const printRefAuth = useRef<HTMLDivElement>(null);
+  const printRef = useRef<HTMLIFrameElement>(null);
+  const printRefAuth = useRef<HTMLIFrameElement>(null);
   
   const { data: tranWts, isLoading: isListLoading } = useTranWts();
   const { data: tranWt, isLoading: isDetailLoading } = useTranWt(
@@ -83,7 +83,7 @@ export default function GenerateReceiptPage() {
     };
   }, [tranWt]);
 
-  const downloadSinglePdf = async (node: HTMLDivElement, filename: string) => {
+  const downloadSinglePdf = async (node: HTMLElement, filename: string) => {
     const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
       import("html2canvas"),
       import("jspdf"),
@@ -115,11 +115,11 @@ export default function GenerateReceiptPage() {
         // html2canvas draws the .fill-line-bold border-bottom through the
         // middle of the text instead of underneath it — a known html2canvas
         // font-metrics quirk that only shows up here because these spans
-        // sit inline in flowing paragraph text and can wrap across lines
-        // (see the note in DeliveryChallan.css about its line-height
-        // computation differing from a real browser's). Print/screen render
-        // the real border correctly; only the rasterized clone needs the
-        // swap to a native text-decoration underline.
+        // (in the authorization letter template) sit inline in flowing
+        // paragraph text and can wrap across lines. Print/screen render the
+        // real border correctly; only the rasterized clone needs the swap
+        // to a native text-decoration underline. The delivery challan
+        // template has no .fill-line-bold elements, so this is a no-op there.
         //
         // .value-underline (Gold/Ornaments weight, Cash, Words, Invoice No)
         // is deliberately NOT touched here — those sit in a single-line flex
@@ -155,12 +155,12 @@ export default function GenerateReceiptPage() {
   const handlePrint = () => {
     if (!tranWt) return;
 
-    // DeliveryChallan.css / Authorization.css already define an
-    // @media print block that hides everything except the visible
-    // #receipt-printable / #auth-letter-printable element, so printing
-    // the current window directly (no extra popup window) picks up
-    // whichever document is currently selected.
-    window.print();
+    // Both documents render inside an iframe sourced from their own
+    // ChallanFormat template (DELIVERYFORM / AUTHFORM), each with its own
+    // @page/@media print rules, so each needs to be printed as its own
+    // document rather than via the host page's window.print().
+    const iframe = documentType === "delivery-challan" ? printRef.current : printRefAuth.current;
+    iframe?.contentWindow?.print();
   };
 
   const handleDownloadPdf = async () => {
@@ -169,13 +169,13 @@ export default function GenerateReceiptPage() {
     setIsDownloading(true);
 
     try {
-      const node = documentType === "delivery-challan" 
-        ? printRef.current 
-        : printRefAuth.current;
-      
+      const iframe = documentType === "delivery-challan" ? printRef.current : printRefAuth.current;
+      const nodeId = documentType === "delivery-challan" ? "receipt-printable" : "auth-letter-printable";
+      const node = iframe?.contentDocument?.getElementById(nodeId);
+
       const filename = documentType === "delivery-challan"
-        ? `delivery-challan-${tranWt.id}.pdf`
-        : `authorization-letter-${tranWt.id}.pdf`;
+        ? `Delivery-Challan-${tranWt.id}.pdf`
+        : `Authorization-Letter-${tranWt.id}.pdf`;
 
       if (node) {
         await downloadSinglePdf(node, filename);

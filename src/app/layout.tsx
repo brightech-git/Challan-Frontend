@@ -17,6 +17,9 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Challan",
   description: "Challan management",
+  icons: {
+    icon: "/icon-rounded.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
