@@ -67,7 +67,7 @@ export default function GenerateReceiptPage() {
       invoiceDate: tranWt.tranDate,
       company: {
         companyName: from?.companyName ?? "Laxmi Jewellery",
-        subtitle: "MANUFACTURERS • WHOLESALERS • EXPORTERS",
+        subtitle: tranWt.header1 ?? null,
         email: from?.email ?? null,
         website: null,
         cin: null,

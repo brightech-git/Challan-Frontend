@@ -34,7 +34,7 @@ const CHALLAN_FONT_SIZES = {
     footer: "7px",
     stamp: "6px",
     title: "10px",
-    logo: "20px",
+    logo: "15px",
     logoSubtitle: "7px",
   },
 
@@ -54,7 +54,7 @@ const CHALLAN_FONT_SIZES = {
     footer: "8px",
     stamp: "7px",
     title: "11px",
-    logo: "21px",
+    logo: "16px",
     logoSubtitle: "8px",
   },
 
@@ -74,7 +74,7 @@ const CHALLAN_FONT_SIZES = {
     footer: "11px",
     stamp: "10px",
     title: "14px",
-    logo: "25px",
+    logo: "19px",
     logoSubtitle: "11px",
   },
 } as const;
@@ -96,6 +96,9 @@ const dateFormat = (date: string | Date | null | undefined) => {
     year: "numeric",
   });
 };
+
+const shortName = (name: string | null | undefined) =>
+  name ? name.split("-")[0].trim() : null;
 
 export default function DeliveryChallan({
   tranWt,
@@ -148,11 +151,11 @@ export default function DeliveryChallan({
 
           <div>
             <div className="logo-name">
-              {from?.companyName ?? tranWt.fromCompanyId ?? "LAXMI JEWELLERY"}
+              {shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "LAXMI JEWELLERY"}
             </div>
 
             <div className="logo-subtitle">
-              MANUFACTURER • WHOLESALER • EXPORTER
+              {tranWt.header1 || "\u00a0"}
             </div>
           </div>
         </div>
@@ -163,7 +166,7 @@ export default function DeliveryChallan({
             border, unlike a fixed-height box combined with line-height
             or table-cell centering. */}
         <div className="challan-title" style={{ fontSize: fonts.title }}>
-          Delivery Challan for Goods sent on Approval
+          {tranWt.header2 || "\u00a0"}
         </div>
       </div>
 
@@ -185,7 +188,7 @@ export default function DeliveryChallan({
                 <span className="label-text">Company</span>
                 <span className="label-colon">:</span>
               </span>
-              <span>{to?.companyName ?? tranWt.toCompanyId ?? "—"}</span>
+              <span>{shortName(to?.companyName) ?? tranWt.toCompanyId ?? "—"}</span>
             </div>
 
             <div>
@@ -229,7 +232,7 @@ export default function DeliveryChallan({
                 <span className="label-text">Company</span>
                 <span className="label-colon">:</span>
               </span>
-              <span>{from?.companyName ?? tranWt.fromCompanyId ?? "—"}</span>
+              <span>{shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "—"}</span>
             </div>
 
             <div>
@@ -434,32 +437,36 @@ export default function DeliveryChallan({
             <span>{money(tranWt.value)}</span>
           </div>
 
-          <div className="amount-line">
-            <span>CGST {tranWt.cgstPer ?? 0}%</span>
+          {!!tranWt.csstAmt && (
+            <div className="amount-line">
+              <span>CGST {tranWt.cgstPer ?? 0}%</span>
+              <span>{money(tranWt.csstAmt)}</span>
+            </div>
+          )}
 
-            <span>{money(tranWt.csstAmt)}</span>
-          </div>
+          {!!tranWt.sgstAmt && (
+            <div className="amount-line">
+              <span>SGST {tranWt.sgstPer ?? 0}%</span>
+              <span>{money(tranWt.sgstAmt)}</span>
+            </div>
+          )}
 
-          <div className="amount-line">
-            <span>SGST {tranWt.sgstPer ?? 0}%</span>
+          {!!tranWt.igstAmt && (
+            <div className="amount-line">
+              <span>IGST {tranWt.igstPer ?? 0}%</span>
+              <span>{money(tranWt.igstAmt)}</span>
+            </div>
+          )}
 
-            <span>{money(tranWt.sgstAmt)}</span>
-          </div>
-
-          <div className="amount-line">
-            <span>IGST {tranWt.igstPer ?? 0}%</span>
-
-            <span>{money(tranWt.igstAmt)}</span>
-          </div>
-
-          <div className="amount-line">
-            <span>ROUND OFF</span>
-
-            <span>
-              {roundOff === 0 ? "" : roundOff > 0 ? "+" : "-"}
-              {money(Math.abs(roundOff))}
-            </span>
-          </div>
+          {roundOff !== 0 && (
+            <div className="amount-line">
+              <span>ROUND OFF</span>
+              <span>
+                {roundOff > 0 ? "+" : "-"}
+                {money(Math.abs(roundOff))}
+              </span>
+            </div>
+          )}
 
           <div className="amount-line final-total">
             <span>Total Value</span>
@@ -506,7 +513,7 @@ export default function DeliveryChallan({
           <div className="signature-title">Received By</div>
 
           <div className="signature-space">
-            Name : {to?.companyName ?? tranWt.toCompanyId ?? "—"}
+            Name : {shortName(to?.companyName) ?? tranWt.toCompanyId ?? "—"}
           </div>
 
           <div className="signature-line">Signed Signature</div>
@@ -514,7 +521,7 @@ export default function DeliveryChallan({
 
         <div className="signature-box right-signature">
           <div className="signature-title">
-            For {from?.companyName ?? tranWt.fromCompanyId ?? "—"}
+            For {shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "—"}
           </div>
 
           <div className="signature-space">
@@ -533,7 +540,7 @@ export default function DeliveryChallan({
       <div className="challan-footer">
         <div className="footer-company">
           <strong>
-            {from?.companyName ?? tranWt.fromCompanyId ?? "Company Name"}
+            {shortName(from?.companyName) ?? tranWt.fromCompanyId ?? "Company Name"}
           </strong>
 
           <div>

@@ -55,6 +55,9 @@ const dateFormat = (
   });
 };
 
+const shortName = (name: string | null | undefined) =>
+  name ? name.split("-")[0].trim() : null;
+
 export default function AuthorizationLetter({
   data,
   printRef,
@@ -86,12 +89,11 @@ export default function AuthorizationLetter({
 
           <div className="brand-text">
             <div className="company-name">
-              {c.companyName || "Laxmi Jewellery"}
+              {shortName(c.companyName) || " Jewellery"}
             </div>
 
             <div className="company-subtitle">
-              {c.subtitle ||
-                "MANUFACTURERS • WHOLESALERS • EXPORTERS"}
+              {c.subtitle || "\u00a0"}
             </div>
           </div>
 
@@ -219,15 +221,16 @@ export default function AuthorizationLetter({
           <div className="detail-row-single">
             <span className="label-normal">Gold weight :</span>
             <span className="value-underline">
+              {/* {data.goldWeight != null ? Number(data.goldWeight).toFixed(3) : "______"} */}
             </span>
             <span className="label-normal">Ornaments weight :</span>
             <span className="value-underline">
-              {data.ornamentsWeight ?? "______"}
+              {data.ornamentsWeight != null ? Number(data.ornamentsWeight).toFixed(3) : "______"}
             </span>
             <span className="label-normal">gm.</span>
             <span className="label-normal" style={{ marginLeft: '6mm' }}>Cash :</span>
             <span className="value-underline">
-              {data.cashAmount != null ? Number(data.cashAmount).toFixed() : "______"}
+              {data.cashAmount != null ? Number(data.cashAmount).toFixed(2) : "______"}
             </span>
           </div>
 
@@ -276,7 +279,7 @@ export default function AuthorizationLetter({
           <div className="company-signature">
 
             <div className="for-company">
-              For {c.companyName || "LAXMI JEWELLERY CHENNAI PVT.LTD."}
+              For {shortName(c.companyName) || "LAXMI JEWELLERY CHENNAI PVT.LTD."}
             </div>
 
             <div className="stamp-area">
@@ -301,7 +304,7 @@ export default function AuthorizationLetter({
       <div className="letter-footer">
 
         <strong>
-          {c.companyName || "LAXMI JEWELLERY CHENNAI (P) LTD"}
+          {shortName(c.companyName) || "LAXMI JEWELLERY CHENNAI (P) LTD"}
         </strong>
 
         {c.branchAddress && (

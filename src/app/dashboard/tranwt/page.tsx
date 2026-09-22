@@ -38,7 +38,7 @@ import { Company, TranType, TranWt, TranWtInput } from "@/types";
  * stores whatever numbers it's given — see TranWtService.java — it does
  * not compute them itself). The formula used here:
  *
- *   netWt        = grsWt - stnWt
+ *   netWt        = grsWt - stnWt (auto-filled on change, but directly editable/overridable)
  *   basisWeight  = calType === "NETWT" ? netWt : grsWt
  *   value        = basisWeight * rate
  *   cgstAmt      = value * cgstPer / 100   (stored as csstAmt per the API)
@@ -59,12 +59,15 @@ interface DraftState {
   description: string;
   grsWt: string;
   stnWt: string;
+  netWt: string;
   rate: string;
   calType: TranType;
   cgstPer: string;
   sgstPer: string;
   igstPer: string;
   hsnCode: string;
+  header1: string;
+  header2: string;
 }
 
 const emptyDraft: DraftState = {
@@ -75,12 +78,15 @@ const emptyDraft: DraftState = {
   description: "",
   grsWt: "",
   stnWt: "",
+  netWt: "",
   rate: "",
   calType: "NETWT",
   cgstPer: "",
   sgstPer: "",
   igstPer: "",
   hsnCode: "",
+  header1: "",
+  header2: "",
 };
 
 function toDraft(row: TranWt): DraftState {
@@ -90,14 +96,17 @@ function toDraft(row: TranWt): DraftState {
     tranDate: row.tranDate ? row.tranDate.slice(0, 10) : new Date().toISOString().slice(0, 10),
     metalId: row.metalId ?? "",
     description: row.description ?? "",
-    grsWt: row.grsWt != null ? String(row.grsWt) : "",
-    stnWt: row.stnWt != null ? String(row.stnWt) : "",
-    rate: row.rate != null ? String(row.rate) : "",
+    grsWt: row.grsWt != null ? Number(row.grsWt).toFixed(3) : "",
+    stnWt: row.stnWt != null ? Number(row.stnWt).toFixed(3) : "",
+    netWt: row.netWt != null ? Number(row.netWt).toFixed(3) : "",
+    rate: row.rate != null ? Number(row.rate).toFixed(2) : "",
     calType: row.calType ?? "NETWT",
     cgstPer: row.cgstPer != null ? String(row.cgstPer) : "",
     sgstPer: row.sgstPer != null ? String(row.sgstPer) : "",
     igstPer: row.igstPer != null ? String(row.igstPer) : "",
     hsnCode: row.hsnCode ?? "",
+    header1: row.header1 ?? "",
+    header2: row.header2 ?? "",
   };
 }
 
@@ -108,8 +117,7 @@ const num = (s: string) => {
 
 function computeTotals(draft: DraftState) {
   const grsWt = num(draft.grsWt);
-  const stnWt = num(draft.stnWt);
-  const netWt = grsWt - stnWt;
+  const netWt = num(draft.netWt);
   const basisWeight = draft.calType === "NETWT" ? netWt : grsWt;
   const value = basisWeight * num(draft.rate);
   const cgstAmt = (value * num(draft.cgstPer)) / 100;
@@ -122,12 +130,6 @@ function computeTotals(draft: DraftState) {
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-// Weights are stored/displayed to 3 decimal places, amounts (rate, GST
-// amounts, value, total) to 2 — matching how the backend/reports round
-// these figures.
-const weight = (n: number) =>
-  n.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
 
 export default function TranWtPage() {
   const [search, setSearch] = useState("");
@@ -255,6 +257,17 @@ export default function TranWtPage() {
     setDraft((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Net Weight auto-fills from Gross - Stone whenever either changes, but
+  // stays directly editable so the user can override/round it afterward —
+  // the next Gross/Stone edit recomputes it and overwrites that override.
+  const setGrsWt = (value: string) => {
+    setDraft((prev) => ({ ...prev, grsWt: value, netWt: (num(value) - num(prev.stnWt)).toFixed(3) }));
+  };
+
+  const setStnWt = (value: string) => {
+    setDraft((prev) => ({ ...prev, stnWt: value, netWt: (num(prev.grsWt) - num(value)).toFixed(3) }));
+  };
+
   // CGST/SGST and IGST are mutually exclusive (intra-state vs inter-state
   // tax) — entering one clears and disables the other side.
   const setCgstOrSgst = (key: "cgstPer" | "sgstPer", value: string) => {
@@ -307,6 +320,8 @@ export default function TranWtPage() {
       igstAmt: totals.igstAmt,
       total: totals.total,
       hsnCode: draft.hsnCode || null,
+      header1: draft.header1 || null,
+      header2: draft.header2 || null,
       userId: null,
     };
   };
@@ -402,7 +417,7 @@ export default function TranWtPage() {
         <Portal>
           <Dialog.Backdrop />
           <Dialog.Positioner>
-            <Dialog.Content>
+            <Dialog.Content maxW="7xl">
               <Dialog.Header>
                 <Dialog.Title>{editing ? "Edit Transaction" : "New Transaction"}</Dialog.Title>
               </Dialog.Header>
@@ -415,7 +430,7 @@ export default function TranWtPage() {
                   autoComplete="off"
                 >
                 <Stack gap={5}>
-                  <Grid templateColumns="repeat(3, 1fr)" gap={4}>
+                  <Grid templateColumns="repeat(4, 1fr)" gap={4}>
                     <GridItem colSpan={1}>
                       <Field.Root required>
                         <Field.Label>
@@ -531,13 +546,35 @@ export default function TranWtPage() {
                       </Field.Root>
                     </GridItem>
 
-                    <GridItem colSpan={3}>
+                    <GridItem colSpan={2}>
                       <Field.Root>
                         <Field.Label>Description</Field.Label>
                         <Input
                           autoComplete="off"
                           value={draft.description}
                           onChange={(e) => setField("description", e.target.value)}
+                        />
+                      </Field.Root>
+                    </GridItem>
+
+                    <GridItem colSpan={2}>
+                      <Field.Root>
+                        <Field.Label>Header 1</Field.Label>
+                        <Input
+                          autoComplete="off"
+                          value={draft.header1}
+                          onChange={(e) => setField("header1", e.target.value)}
+                        />
+                      </Field.Root>
+                    </GridItem>
+
+                    <GridItem colSpan={2}>
+                      <Field.Root>
+                        <Field.Label>Header 2</Field.Label>
+                        <Input
+                          autoComplete="off"
+                          value={draft.header2}
+                          onChange={(e) => setField("header2", e.target.value)}
                         />
                       </Field.Root>
                     </GridItem>
@@ -550,7 +587,8 @@ export default function TranWtPage() {
                           step="0.001"
                           autoComplete="off"
                           value={draft.grsWt}
-                          onChange={(e) => setField("grsWt", e.target.value)}
+                          onChange={(e) => setGrsWt(e.target.value)}
+                          onBlur={(e) => { if (e.target.value !== "") setDraft((p) => ({ ...p, grsWt: num(e.target.value).toFixed(3) })); }}
                         />
                       </Field.Root>
                     </GridItem>
@@ -563,15 +601,24 @@ export default function TranWtPage() {
                           step="0.001"
                           autoComplete="off"
                           value={draft.stnWt}
-                          onChange={(e) => setField("stnWt", e.target.value)}
+                          onChange={(e) => setStnWt(e.target.value)}
+                          onBlur={(e) => { if (e.target.value !== "") setDraft((p) => ({ ...p, stnWt: num(e.target.value).toFixed(3) })); }}
                         />
                       </Field.Root>
                     </GridItem>
 
                     <GridItem colSpan={1}>
                       <Field.Root>
-                        <Field.Label>Net Weight (calculated)</Field.Label>
-                        <Input readOnly value={weight(totals.netWt)} bg="bg.muted" />
+                        <Field.Label>Net Weight</Field.Label>
+                        <Input
+                          type="number"
+                          step="0.001"
+                          autoComplete="off"
+                          value={draft.netWt}
+                          onChange={(e) => setField("netWt", e.target.value)}
+                          onBlur={(e) => { const n = num(e.target.value); if (e.target.value !== "") setField("netWt", n.toFixed(3)); }}
+                        />
+                        {/* <Field.HelperText>Auto-filled from Gross − Stone; editable</Field.HelperText> */}
                       </Field.Root>
                     </GridItem>
 
@@ -584,6 +631,7 @@ export default function TranWtPage() {
                           autoComplete="off"
                           value={draft.rate}
                           onChange={(e) => setField("rate", e.target.value)}
+                          onBlur={(e) => { if (e.target.value !== "") setField("rate", num(e.target.value).toFixed(2)); }}
                         />
                       </Field.Root>
                     </GridItem>
@@ -644,25 +692,33 @@ export default function TranWtPage() {
                     <Text fontWeight="semibold" mb={3}>
                       Computed totals
                     </Text>
-                    <Grid templateColumns="repeat(2, 1fr)" gap={3} fontSize="sm">
-                      <HStack justify="space-between">
-                        <Text color="fg.muted">Value</Text>
-                        <Text fontWeight="medium">{money(totals.value)}</Text>
-                      </HStack>
-                      <HStack justify="space-between">
-                        <Text color="fg.muted">CGST Amt</Text>
-                        <Text fontWeight="medium">{money(totals.cgstAmt)}</Text>
-                      </HStack>
-                      <HStack justify="space-between">
-                        <Text color="fg.muted">SGST Amt</Text>
-                        <Text fontWeight="medium">{money(totals.sgstAmt)}</Text>
-                      </HStack>
-                      <HStack justify="space-between">
-                        <Text color="fg.muted">IGST Amt</Text>
-                        <Text fontWeight="medium">{money(totals.igstAmt)}</Text>
-                      </HStack>
+                    <Grid templateColumns="repeat(1, 1fr)" gap={3} fontSize="sm">
+                      {totals.value !== 0 && (
+                        <HStack justify="flex-end" gap={20}>
+                          <Text color="fg.muted">Value</Text>
+                          <Text fontWeight="medium">{money(totals.value)}</Text>
+                        </HStack>
+                      )}
+                      {totals.cgstAmt !== 0 && (
+                        <HStack justify="flex-end" gap={20}>
+                          <Text color="fg.muted">CGST Amt</Text>
+                          <Text fontWeight="medium">{money(totals.cgstAmt)}</Text>
+                        </HStack>
+                      )}
+                      {totals.sgstAmt !== 0 && (
+                        <HStack justify="flex-end" gap={20}>
+                          <Text color="fg.muted">SGST Amt</Text>
+                          <Text fontWeight="medium">{money(totals.sgstAmt)}</Text>
+                        </HStack>
+                      )}
+                      {totals.igstAmt !== 0 && (
+                        <HStack justify="flex-end" gap={20}>
+                          <Text color="fg.muted">IGST Amt</Text>
+                          <Text fontWeight="medium">{money(totals.igstAmt)}</Text>
+                        </HStack>
+                      )}
                     </Grid>
-                    <HStack justify="space-between" mt={3} pt={3} borderTopWidth="1px">
+                    <HStack justify="flex-end" gap={10} mt={3} pt={3} borderTopWidth="1px">
                       <Text fontWeight="semibold">Total</Text>
                       <Text fontWeight="bold" fontSize="lg" color="primary">
                         {money(totals.total)}

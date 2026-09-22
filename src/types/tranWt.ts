@@ -25,6 +25,8 @@ export interface TranWt {
   igstAmt?: number | null;
   total?: number | null;
   hsnCode?: string | null;
+  header1?: string | null;
+  header2?: string | null;
   updatedDate?: string | null;
   createdDate?: string | null;
   userId?: number | null;
