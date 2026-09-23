@@ -51,6 +51,18 @@ export const METAL_MAST = {
   UPDATE: (id: string) => `/metalmast/${id}`,
 } as const;
 
+export const HEADER1 = {
+  GET_ALL: "/header1",
+  CREATE: "/header1",
+  DELETE: (sno: number) => `/header1/${sno}`,
+} as const;
+
+export const HEADER2 = {
+  GET_ALL: "/header2",
+  CREATE: "/header2",
+  DELETE: (sno: number) => `/header2/${sno}`,
+} as const;
+
 export const TRAN_WT = {
   CREATE: "/tranwt",
   GET_ALL: "/tranwt",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useMemo, useRef, useState, useEffect, type KeyboardEvent } from "react";
 import {
   Box,
   Button,
@@ -16,13 +16,21 @@ import {
   Text,
   useDisclosure,
 } from "@chakra-ui/react";
-import { LuPlus } from "react-icons/lu";
+import { LuPlus, LuTrash2 } from "react-icons/lu";
+
+
 import { DataTable } from "@/components/table";
 import { ColumnConfig } from "@/components/table/types";
 import {
   useActiveCompanies,
+  useCreateHeader1,
+  useDeleteHeader1,
+  useCreateHeader2,
+  useDeleteHeader2,
   useCreateTranWt,
   useDeleteTranWt,
+  useHeader1s,
+  useHeader2s,
   useMetalMasts,
   useTranWts,
   useUpdateTranWt,
@@ -137,6 +145,46 @@ export default function TranWtPage() {
   const [draft, setDraft] = useState<DraftState>(emptyDraft);
   const [formError, setFormError] = useState<string | null>(null);
   const dialog = useDisclosure();
+  const headerDialog = useDisclosure();
+  const header2Dialog = useDisclosure();
+  const [newHeader, setNewHeader] = useState("");
+  const [newHeader2, setNewHeader2] = useState("");
+  const [openHeaderDropdown, setOpenHeaderDropdown] = useState<"header1" | "header2" | null>(null);
+  const headerDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (headerDropdownRef.current && !headerDropdownRef.current.contains(e.target as Node))
+        setOpenHeaderDropdown(null);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+  const { data: header1Data } = useHeader1s();
+  const createHeader1 = useCreateHeader1();
+  const deleteHeader1 = useDeleteHeader1();
+  const headerOptions = header1Data ?? [];
+
+  const { data: header2Data } = useHeader2s();
+  const createHeader2 = useCreateHeader2();
+  const deleteHeader2 = useDeleteHeader2();
+  const header2Options = header2Data ?? [];
+
+  const addHeader = async () => {
+    const trimmed = newHeader.trim();
+    if (!trimmed) return;
+    await createHeader1.mutateAsync(trimmed);
+    setNewHeader("");
+    headerDialog.setOpen(false);
+  };
+
+  const addHeader2 = async () => {
+    const trimmed = newHeader2.trim();
+    if (!trimmed) return;
+    await createHeader2.mutateAsync(trimmed);
+    setNewHeader2("");
+    header2Dialog.setOpen(false);
+  };
 
   const { data, isLoading, error } = useTranWts(search || undefined);
   // Fetch the active company list unfiltered and split it by companyType
@@ -241,7 +289,7 @@ export default function TranWtPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setDraft(emptyDraft);
+    setDraft({ ...emptyDraft, header1: headerOptions[0]?.headerName1 ?? "" });
     setFormError(null);
     dialog.setOpen(true);
   };
@@ -557,27 +605,7 @@ export default function TranWtPage() {
                       </Field.Root>
                     </GridItem>
 
-                    <GridItem colSpan={2}>
-                      <Field.Root>
-                        <Field.Label>Header 1</Field.Label>
-                        <Input
-                          autoComplete="off"
-                          value={draft.header1}
-                          onChange={(e) => setField("header1", e.target.value)}
-                        />
-                      </Field.Root>
-                    </GridItem>
-
-                    <GridItem colSpan={2}>
-                      <Field.Root>
-                        <Field.Label>Header 2</Field.Label>
-                        <Input
-                          autoComplete="off"
-                          value={draft.header2}
-                          onChange={(e) => setField("header2", e.target.value)}
-                        />
-                      </Field.Root>
-                    </GridItem>
+                    
 
                     <GridItem colSpan={1}>
                       <Field.Root>
@@ -686,6 +714,93 @@ export default function TranWtPage() {
                         )}
                       </Field.Root>
                     </GridItem>
+                    {(["header1", "header2"] as const).map((key) => (
+                      <GridItem key={key} colSpan={2}>
+                        <Field.Root>
+                          <Field.Label>{key === "header1" ? "Header 1" : "Header 2"}</Field.Label>
+                          <Box position="relative" ref={openHeaderDropdown === key ? headerDropdownRef : undefined} width="100%">
+                            <HStack
+                              borderWidth="1px"
+                              borderRadius="md"
+                              px={3}
+                              h="10"
+                              cursor="pointer"
+                              justify="space-between"
+                              onClick={() => setOpenHeaderDropdown(openHeaderDropdown === key ? null : key)}
+                            >
+                              <Text fontSize="sm" color={draft[key] ? undefined : "fg.muted"}>
+                                {draft[key] || "Select..."}
+                              </Text>
+                              <Text fontSize="xs" color="fg.muted">▾</Text>
+                            </HStack>
+                            {openHeaderDropdown === key && (
+                              <Box
+                                position="absolute"
+                                top="100%"
+                                left={0}
+                                right={0}
+                                zIndex={10}
+                                borderWidth="1px"
+                                borderRadius="md"
+                                bg="bg"
+                                boxShadow="md"
+                                maxH="160px"
+                                overflowY="auto"
+                              >
+                                {(key === "header1" ? headerOptions : header2Options).map((h) => (
+                                  <HStack
+                                    key={h.sno}
+                                    px={3}
+                                    py={2}
+                                    justify="space-between"
+                                    bg={draft[key] === ("headerName1" in h ? h.headerName1 : h.headerName2) ? "bg.subtle" : undefined}
+                                    _hover={{ bg: "bg.muted" }}
+                                    cursor="pointer"
+                                  >
+                                    <Text
+                                      fontSize="sm"
+                                      flex={1}
+                                      onClick={() => {
+                                        const val = "headerName1" in h ? h.headerName1 : h.headerName2;
+                                        setField(key, val);
+                                        setOpenHeaderDropdown(null);
+                                      }}
+                                    >
+                                      {"headerName1" in h ? h.headerName1 : h.headerName2}
+                                    </Text>
+                                    <Button
+                                      size="xs"
+                                      variant="ghost"
+                                      colorPalette="red"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        key === "header1" ? deleteHeader1.mutate(h.sno) : deleteHeader2.mutate(h.sno);
+                                      }}
+                                    >
+                                      <LuTrash2 />
+                                    </Button>
+                                  </HStack>
+                                ))}
+                                <HStack
+                                  px={3}
+                                  py={2}
+                                  cursor="pointer"
+                                  color="blue.500"
+                                  _hover={{ bg: "bg.muted" }}
+                                  onClick={() => {
+                                    setOpenHeaderDropdown(null);
+                                    key === "header1" ? headerDialog.setOpen(true) : header2Dialog.setOpen(true);
+                                  }}
+                                >
+                                  <LuPlus />
+                                  <Text fontSize="sm">Create Header</Text>
+                                </HStack>
+                              </Box>
+                            )}
+                          </Box>
+                        </Field.Root>
+                      </GridItem>
+                    ))}
                   </Grid>
 
                    <Box borderWidth="1px" borderRadius="md" p={4} bg="bg.muted">
@@ -747,6 +862,74 @@ export default function TranWtPage() {
                   </HStack>
                 </Stack>
                 </form>
+              </Dialog.Body>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+      {/* Create Header 1 Dialog */}
+      <Dialog.Root
+        open={headerDialog.open}
+        onOpenChange={(details) => headerDialog.setOpen(details.open)}
+        size="sm"
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>Create Header</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body pb={6}>
+                <Stack gap={4}>
+                  <Field.Root>
+                    <Field.Label>Header Text</Field.Label>
+                    <Input
+                      autoFocus
+                      value={newHeader}
+                      onChange={(e) => setNewHeader(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHeader(); } }}
+                    />
+                  </Field.Root>
+                  <HStack justify="flex-end" gap={3}>
+                    <Button onClick={addHeader} disabled={!newHeader.trim()}>Save</Button>
+                    <Button variant="ghost" onClick={() => { setNewHeader(""); headerDialog.setOpen(false); }}>Cancel</Button>
+                  </HStack>
+                </Stack>
+              </Dialog.Body>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+      {/* Create Header 2 Dialog */}
+      <Dialog.Root
+        open={header2Dialog.open}
+        onOpenChange={(details) => header2Dialog.setOpen(details.open)}
+        size="sm"
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>Create Header</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body pb={6}>
+                <Stack gap={4}>
+                  <Field.Root>
+                    <Field.Label>Header Text</Field.Label>
+                    <Input
+                      autoFocus
+                      value={newHeader2}
+                      onChange={(e) => setNewHeader2(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addHeader2(); } }}
+                    />
+                  </Field.Root>
+                  <HStack justify="flex-end" gap={3}>
+                    <Button onClick={addHeader2} disabled={!newHeader2.trim()}>Add</Button>
+                    <Button variant="ghost" onClick={() => { setNewHeader2(""); header2Dialog.setOpen(false); }}>Cancel</Button>
+                  </HStack>
+                </Stack>
               </Dialog.Body>
             </Dialog.Content>
           </Dialog.Positioner>
