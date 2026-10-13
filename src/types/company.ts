@@ -5,6 +5,7 @@ export type CompanyType = "FROM" | "TO";
 export interface Company {
   companyId: string;
   companyName: string;
+  cinNo?: string | null;
   companyType: CompanyType;
   costId?: string | null;
   address1?: string | null;
@@ -27,6 +28,7 @@ export interface Company {
   tanNo?: string | null;
   gstNo?: string | null;
   stateId?: number | null;
+  stateCode?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }

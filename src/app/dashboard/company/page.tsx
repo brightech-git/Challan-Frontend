@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge, Button, Dialog, Portal, useDisclosure } from "@chakra-ui/react";
+import { Badge, Button, Dialog, Portal, Text, useDisclosure } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
 import { DataTable } from "@/components/table";
 import { ColumnConfig } from "@/components/table/types";
@@ -11,6 +11,7 @@ import {
   useCreateCompany,
   useDeleteCompany,
   useUpdateCompany,
+  useStateMasters,
 } from "@/hooks";
 import { Company, CompanyInput } from "@/types";
 
@@ -41,7 +42,9 @@ const companyFields: FieldConfig[] = [
   { name: "email", label: "Email", type: "email", colSpan: 1 },
   { name: "address1", label: "Address Line 1", type: "text", colSpan: 1 },
   { name: "address2", label: "Address Line 2", type: "text", colSpan: 1 },
+  { name: "stateCode", label: "State", type: "select", colSpan: 1 },
   { name: "panNo", label: "PAN No", type: "text", colSpan: 1 },
+  { name: "cinNo", label: "CIN No", type: "text", colSpan: 1 },
   { name: "tanNo", label: "TAN No", type: "text", colSpan: 1 },
   { name: "shortKey", label: "Short Key", type: "text", colSpan: 1 },
   { name: "displayOrder", label: "Display Order", type: "number", colSpan: 1 },
@@ -54,6 +57,20 @@ export default function CompanyPage() {
   const dialog = useDisclosure();
 
   const { data, isLoading, error } = useCompanies({ search: search || undefined });
+  const { data: states, isLoading: isStatesLoading, error: statesError } = useStateMasters();
+  // The company API stores the numeric state code in its STATEID column.
+  const editingStateCode = editing?.stateId != null
+    ? states?.find((state) => Number(state.stateCode) === editing.stateId)?.stateCode ?? String(editing.stateId).padStart(2, "0")
+    : "";
+  const fields = useMemo(() => companyFields.map((field) => field.name === "stateCode" ? {
+    ...field,
+    placeholder: isStatesLoading ? "Loading states..." : "Select a state",
+    options: [
+      ...(states ?? []).map((state) => ({ label: state.stateName, value: state.stateCode })),
+      ...(editingStateCode && !states?.some((state) => state.stateCode === editingStateCode)
+        ? [{ label: `State code ${editingStateCode}`, value: editingStateCode }] : []),
+    ],
+  } : field), [states, isStatesLoading, editingStateCode]);
   const createCompany = useCreateCompany();
   const updateCompany = useUpdateCompany();
   const deleteCompany = useDeleteCompany();
@@ -73,6 +90,17 @@ export default function CompanyPage() {
         ),
       },
       { key: "gstNo", header: "GST No", width: 150 },
+      { key: "cinNo", header: "CIN No", width: 200 },
+      {
+        key: "stateId", header: "State Code", width: 100,
+        render: (row) => row.stateId != null
+          ? states?.find((state) => Number(state.stateCode) === row.stateId)?.stateCode ?? String(row.stateId).padStart(2, "0")
+          : "—",
+      },
+      {
+        key: "stateName", header: "State", width: 180,
+        render: (row) => states?.find((state) => Number(state.stateCode) === row.stateId)?.stateName ?? "—",
+      },
       { key: "phone", header: "Phone", width: 130 },
       { key: "email", header: "Email", width: 200 },
       {
@@ -86,7 +114,7 @@ export default function CompanyPage() {
         ),
       },
     ],
-    []
+    [states]
   );
 
   const openCreate = () => {
@@ -109,7 +137,9 @@ export default function CompanyPage() {
       email: (values.email as string) || null,
       address1: (values.address1 as string) || null,
       address2: (values.address2 as string) || null,
+      stateId: values.stateCode != null && values.stateCode !== "" ? Number(values.stateCode) : null,
       panNo: (values.panNo as string) || null,
+      cinNo: String(values.cinNo ?? "").trim() || null,
       tanNo: (values.tanNo as string) || null,
       shortKey: (values.shortKey as string) || null,
       displayOrder: values.displayOrder != null ? Number(values.displayOrder) : null,
@@ -162,10 +192,15 @@ export default function CompanyPage() {
                 <Dialog.Title>{editing ? "Edit Company" : "New Company"}</Dialog.Title>
               </Dialog.Header>
               <Dialog.Body pb={6}>
+                {statesError && (
+                  <Text color="red.600" mb={4} role="alert">
+                    Could not load states. {statesError instanceof Error ? statesError.message : "Please try again."}
+                  </Text>
+                )}
                 <DynamicForm
-                  fields={companyFields}
+                  fields={fields}
                   columns={3}
-                  defaultValues={editing ?? { active: true, companyType: "FROM" }}
+                  defaultValues={editing ? { ...editing, stateCode: editingStateCode } : { active: true, companyType: "FROM" }}
                   onSubmit={handleSubmit}
                   onCancel={() => dialog.setOpen(false)}
                   isSubmitting={createCompany.isPending || updateCompany.isPending}

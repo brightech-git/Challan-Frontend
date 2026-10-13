@@ -7,9 +7,14 @@ export const tranWtService = {
     return unwrap<TranWt>(apiClient.post(TRAN_WT.CREATE, input));
   },
 
-  getAll(search?: string) {
+  getAll(search?: string, fromDate?: string, toDate?: string) {
+    const params = {
+      ...(search ? { search } : {}),
+      ...(fromDate ? { fromDate } : {}),
+      ...(toDate ? { toDate } : {}),
+    };
     return unwrap<TranWt[]>(
-      apiClient.get(TRAN_WT.GET_ALL, { params: search ? { search } : undefined })
+      apiClient.get(TRAN_WT.GET_ALL, { params })
     );
   },
 

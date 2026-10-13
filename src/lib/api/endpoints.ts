@@ -36,6 +36,10 @@ export const COMPANY = {
   DELETE: (id: string) => `/company/${id}`,
 } as const;
 
+export const STATE_MASTER = {
+  GET_ALL: "/statemaster",
+} as const;
+
 export const CHALLAN_FORMAT = {
   CREATE: "/challanformat",
   GET_ALL: "/challanformat",

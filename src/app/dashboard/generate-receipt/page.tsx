@@ -3,10 +3,12 @@
 import { useMemo, useRef, useState } from "react";
 import {
   Box,
+  Button,
   Center,
   HStack,
   IconButton,
   Image,
+  Input,
   NativeSelect,
   Spinner,
   Stack,
@@ -23,13 +25,20 @@ type DocumentType = "delivery-challan" | "authorization-letter";
 
 export default function GenerateReceiptPage() {
   const [selectedId, setSelectedId] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [documentType, setDocumentType] = useState<DocumentType>("delivery-challan");
   const [isDownloading, setIsDownloading] = useState(false);
   
   const printRef = useRef<HTMLIFrameElement>(null);
   const printRefAuth = useRef<HTMLIFrameElement>(null);
   
-  const { data: tranWts, isLoading: isListLoading } = useTranWts();
+  const { data: tranWts, isLoading: isListLoading, error: listError } = useTranWts(
+    search.trim() || undefined,
+    fromDate || undefined,
+    toDate || undefined
+  );
   const { data: tranWt, isLoading: isDetailLoading } = useTranWt(
     selectedId ? Number(selectedId) : null
   );
@@ -209,6 +218,44 @@ export default function GenerateReceiptPage() {
           align="flex-start"
           className="no-print"
         >
+          <HStack gap={4} flexWrap="wrap" align="flex-end" w="full">
+            <Box flex="1" minW="240px">
+              <Text asChild fontSize="sm" fontWeight="medium" mb={1} display="block"><label htmlFor="receipt-search">Search transactions</label></Text>
+              <Input
+                id="receipt-search"
+                placeholder="Transaction number or company name"
+                value={search}
+                onChange={(event) => { setSearch(event.target.value); setSelectedId(""); }}
+              />
+            </Box>
+            <Box>
+              <Text asChild fontSize="sm" fontWeight="medium" mb={1} display="block"><label htmlFor="receipt-from-date">From date</label></Text>
+              <Input id="receipt-from-date" type="date" value={fromDate} max={toDate || undefined}
+                onChange={(event) => { setFromDate(event.target.value); setSelectedId(""); }} />
+            </Box>
+            <Box>
+              <Text asChild fontSize="sm" fontWeight="medium" mb={1} display="block"><label htmlFor="receipt-to-date">To date</label></Text>
+              <Input id="receipt-to-date" type="date" value={toDate} min={fromDate || undefined}
+                onChange={(event) => { setToDate(event.target.value); setSelectedId(""); }} />
+            </Box>
+            <Button variant="outline" disabled={!search && !fromDate && !toDate}
+              onClick={() => { setSearch(""); setFromDate(""); setToDate(""); setSelectedId(""); }}>
+              Clear filters
+            </Button>
+          </HStack>
+          {fromDate && toDate && fromDate > toDate && (
+            <Text color="red.600" role="alert">From date must be on or before To date.</Text>
+          )}
+          {listError && (
+            <Text color="red.600" role="alert">
+              {listError instanceof Error ? listError.message : "Could not load transactions."}
+            </Text>
+          )}
+          {!isListLoading && !listError && !(fromDate && toDate && fromDate > toDate) && (
+            <Text fontSize="sm" color="fg.muted" role="status">
+              {options.length === 0 ? "No transactions match your filters." : `${options.length} transaction${options.length === 1 ? "" : "s"} found`}
+            </Text>
+          )}
           <HStack
             gap={4}
             align="flex-end"

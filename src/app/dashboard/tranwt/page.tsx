@@ -144,6 +144,7 @@ export default function TranWtPage() {
   const [editing, setEditing] = useState<TranWt | null>(null);
   const [draft, setDraft] = useState<DraftState>(emptyDraft);
   const [formError, setFormError] = useState<string | null>(null);
+  const [savedTransaction, setSavedTransaction] = useState<{ id: number; action: "created" | "updated" } | null>(null);
   const dialog = useDisclosure();
   const headerDialog = useDisclosure();
   const header2Dialog = useDisclosure();
@@ -384,9 +385,12 @@ export default function TranWtPage() {
 
     try {
       if (editing) {
-        await updateTranWt.mutateAsync({ id: editing.id, input, companyId: draft.fromCompanyId });
+        const response = await updateTranWt.mutateAsync({ id: editing.id, input, companyId: draft.fromCompanyId });
+        setSavedTransaction({ id: response.id, action: "updated" });
       } else {
-        await createTranWt.mutateAsync(input);
+        const response = await createTranWt.mutateAsync(input);
+        console.log("Create transaction API response:", response);
+        setSavedTransaction({ id: response.id, action: "created" });
       }
       dialog.setOpen(false);
     } catch {
@@ -931,6 +935,29 @@ export default function TranWtPage() {
                   </HStack>
                 </Stack>
               </Dialog.Body>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+      <Dialog.Root
+        open={savedTransaction !== null}
+        onOpenChange={(details) => { if (!details.open) setSavedTransaction(null); }}
+        size="sm"
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>Transaction {savedTransaction?.action} successfully</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Text>Your transaction has been {savedTransaction?.action}.</Text>
+                <Text mt={3} fontSize="lg" fontWeight="bold">Transaction ID: {savedTransaction?.id}</Text>
+              </Dialog.Body>
+              <Dialog.Footer>
+                <Button onClick={() => setSavedTransaction(null)}>OK</Button>
+              </Dialog.Footer>
             </Dialog.Content>
           </Dialog.Positioner>
         </Portal>

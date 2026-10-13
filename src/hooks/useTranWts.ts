@@ -5,10 +5,11 @@ import { tranWtService } from "@/services";
 import { TranWtInput } from "@/types";
 import { getErrorMessage, toast } from "@/lib/toast";
 
-export function useTranWts(search?: string) {
+export function useTranWts(search?: string, fromDate?: string, toDate?: string) {
   return useQuery({
-    queryKey: ["tranWts", { search }],
-    queryFn: () => tranWtService.getAll(search),
+    queryKey: ["tranWts", { search, fromDate, toDate }],
+    queryFn: () => tranWtService.getAll(search, fromDate, toDate),
+    enabled: !fromDate || !toDate || fromDate <= toDate,
   });
 }
 

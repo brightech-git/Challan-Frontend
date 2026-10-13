@@ -23,22 +23,37 @@ export const navItems: NavItem[] = [
   { label: "User Master", href: "/dashboard/users", icon: LuUsers },
   { label: "Company Master", href: "/dashboard/company", icon: LuBuilding2 },
   { label: "Metal Master", href: "/dashboard/metal-master", icon: LuGem },
+
   { label: "Transactions", href: "/dashboard/tranwt", icon: LuReceipt },
-  { label: "Receipt Generation", href: "/dashboard/generate-receipt", icon: LuPrinter },
-  { label: "Transactions Reports", href: "/dashboard/report", icon: LuFileText },
+  {
+    label: "Receipt Generation",
+    href: "/dashboard/generate-receipt",
+    icon: LuPrinter,
+  },
+  {
+    label: "Transactions Reports",
+    href: "/dashboard/report",
+    icon: LuFileText,
+  },
 ];
 
 // Reachable by URL but intentionally not linked from the sidebar.
 const EXTRA_PAGE_TITLES: { href: string; label: string }[] = [
   { href: "/dashboard/challan-format", label: "Challan Formats" },
+  { label: "Copy Labels", href: "/dashboard/copy-labels" },
 ];
 
 const pageTitles = [...navItems, ...EXTRA_PAGE_TITLES];
 
 export function isNavItemActive(pathname: string, href: string) {
-  return pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+  return (
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
+  );
 }
 
 export function getPageTitle(pathname: string): string | null {
-  return pageTitles.find((item) => isNavItemActive(pathname, item.href))?.label ?? null;
+  return (
+    pageTitles.find((item) => isNavItemActive(pathname, item.href))?.label ??
+    null
+  );
 }

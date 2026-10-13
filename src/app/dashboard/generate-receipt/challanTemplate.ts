@@ -13,7 +13,7 @@ export function injectTemplateData(
   jsonData: unknown,
   options: { varName: string; logoClass?: string }
 ): string {
-  const json = JSON.stringify(jsonData);
+  const json = JSON.stringify(jsonData).replace(/</g, "\\u003c");
   const { varName, logoClass } = options;
 
   let out = html.replace(
@@ -35,9 +35,9 @@ export function injectTemplateData(
   }
 
   const assignRegex = new RegExp(
-    `const\\s+${varName}\\s*=\\s*loadDataFromUrl\\(\\)\\s*;`
+    `(?:const|let|var)\\s+${varName}\\s*=\\s*loadDataFromUrl\\(\\)\\s*;`
   );
-  const withAssignment = out.replace(assignRegex, `const ${varName} = ${json};`);
+  const withAssignment = out.replace(assignRegex, () => `const ${varName} = ${json};`);
 
   if (withAssignment !== out) {
     return withAssignment;
@@ -46,5 +46,5 @@ export function injectTemplateData(
   // Fallback in case the template no longer assigns the variable this way:
   // patch the `window.location.search` read directly instead.
   const search = "?data=" + encodeURIComponent(json);
-  return out.replace(/window\.location\.search/g, JSON.stringify(search));
+  return out.replace(/window\.location\.search\b(?!\s*=(?!=))/g, () => JSON.stringify(search));
 }
