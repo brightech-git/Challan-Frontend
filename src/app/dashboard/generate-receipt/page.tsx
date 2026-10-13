@@ -3,42 +3,44 @@
 import { useMemo, useRef, useState } from "react";
 import {
   Box,
-  Button,
+  Combobox,
   Center,
   HStack,
   IconButton,
   Image,
-  Input,
+  Portal,
   NativeSelect,
   Spinner,
   Stack,
   Text,
-  VStack,
+  createListCollection,
 } from "@chakra-ui/react";
 import { LuDownload, LuPrinter } from "react-icons/lu";
 import { useTranWt, useTranWts } from "@/hooks";
 import { amountInWords } from "@/lib/numberToWords";
 import DeliveryChallan from "./DeliveryChallan";
 import AuthorizationLetter from "./AuthorizationLetter";
+import { useCopyLabels } from "@/hooks/useCopyLabels";
 
 type DocumentType = "delivery-challan" | "authorization-letter";
 
 export default function GenerateReceiptPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [fromDate, setFromDate] = useState("");
-  const [toDate, setToDate] = useState("");
+
+
   const [documentType, setDocumentType] = useState<DocumentType>("delivery-challan");
   const [isDownloading, setIsDownloading] = useState(false);
+  const [outputError, setOutputError] = useState("");
+  const { labels } = useCopyLabels();
+  const copyLabels = labels.slice(0, 2);
   
   const printRef = useRef<HTMLIFrameElement>(null);
   const printRefAuth = useRef<HTMLIFrameElement>(null);
+  const secondPrintRef = useRef<HTMLIFrameElement>(null);
+  const secondPrintRefAuth = useRef<HTMLIFrameElement>(null);
   
-  const { data: tranWts, isLoading: isListLoading, error: listError } = useTranWts(
-    search.trim() || undefined,
-    fromDate || undefined,
-    toDate || undefined
-  );
+  const { data: tranWts, isLoading: isListLoading, error: listError } = useTranWts(search.trim() || undefined);
   const { data: tranWt, isLoading: isDetailLoading } = useTranWt(
     selectedId ? Number(selectedId) : null
   );
@@ -79,7 +81,7 @@ export default function GenerateReceiptPage() {
         subtitle: tranWt.header1 ?? null,
         email: from?.email ?? null,
         website: null,
-        cin: null,
+        cin: from?.cinNo ?? null,
         gstNo: from?.gstNo ?? null,
         panNo: from?.panNo ?? null,
         branchAddress: [from?.address1, from?.address2].filter(Boolean).join(", ") || null,
@@ -92,12 +94,16 @@ export default function GenerateReceiptPage() {
     };
   }, [tranWt]);
 
-  const downloadSinglePdf = async (node: HTMLElement, filename: string) => {
+  const downloadCopiesPdf = async (nodes: HTMLElement[], filename: string) => {
     const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
       import("html2canvas"),
       import("jspdf"),
     ]);
 
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    for (const [index, node] of nodes.entries()) {
+    await node.ownerDocument.fonts.ready;
+    await Promise.all(Array.from(node.querySelectorAll("img")).map((img) => img.decode().catch(() => undefined)));
     node.style.display = 'block';
     node.style.visibility = 'visible';
     node.style.opacity = '1';
@@ -151,46 +157,73 @@ export default function GenerateReceiptPage() {
 
     const imageData = canvas.toDataURL("image/png");
 
-    const pdf = new jsPDF({
-      orientation: "portrait",
-      unit: "px",
-      format: [canvas.width, canvas.height],
-    });
-
-    pdf.addImage(imageData, "PNG", 0, 0, canvas.width, canvas.height);
+    if (index > 0) pdf.addPage();
+    const scale = Math.min(210 / canvas.width, 297 / canvas.height);
+    pdf.addImage(imageData, "PNG", 0, 0, canvas.width * scale, canvas.height * scale);
+    }
     pdf.save(filename);
   };
 
-  const handlePrint = () => {
-    if (!tranWt) return;
+  const getCopyNodes = () => {
+    const refs = documentType === "delivery-challan" ? [printRef, secondPrintRef] : [printRefAuth, secondPrintRefAuth];
+    const nodeId = documentType === "delivery-challan" ? "receipt-printable" : "auth-letter-printable";
+    return copyLabels.map((_, index) => {
+      const frame = refs[index].current;
+      const node = frame?.contentDocument?.getElementById(nodeId);
+      if (!node || frame?.contentDocument?.readyState !== "complete") throw new Error("Copies are still loading. Please try again.");
+      return node;
+    });
+  };
 
-    // Both documents render inside an iframe sourced from their own
-    // ChallanFormat template (DELIVERYFORM / AUTHFORM), each with its own
-    // @page/@media print rules, so each needs to be printed as its own
-    // document rather than via the host page's window.print().
-    const iframe = documentType === "delivery-challan" ? printRef.current : printRefAuth.current;
-    iframe?.contentWindow?.print();
+  const handlePrint = () => {
+    if (!tranWt || !copyLabels.length) return;
+    setOutputError("");
+    try {
+      const nodes = getCopyNodes();
+      const frame = document.createElement("iframe");
+      frame.style.cssText = "position:fixed;left:-10000px;width:210mm;height:297mm;border:0";
+      frame.onload = async () => {
+        const doc = frame.contentDocument;
+        const win = frame.contentWindow;
+        if (!doc || !win) { frame.remove(); return; }
+        try {
+          await doc.fonts.ready;
+          await Promise.all(Array.from(doc.images).map((img) => img.decode().catch(() => undefined)));
+          win.addEventListener("afterprint", () => frame.remove(), { once: true });
+          win.focus();
+          win.print();
+        } catch { frame.remove(); setOutputError("Could not print the copies."); }
+      };
+      const styles = Array.from(nodes[0].ownerDocument.querySelectorAll('style, link[rel="stylesheet"]')).map((style) => style.outerHTML).join("");
+      frame.srcdoc = `<!DOCTYPE html><html><head>${styles}<style>
+        @page{size:A4;margin:0}
+        html,body{margin:0!important;padding:0!important;background:white!important;height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+        .receipt-copy{position:relative!important;display:block!important;width:210mm;height:297mm;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always;visibility:visible!important}
+        .receipt-copy:last-child{break-after:auto;page-break-after:auto}
+        .receipt-copy *{visibility:visible!important}
+        .receipt-copy > #receipt-printable,.receipt-copy > #auth-letter-printable{position:relative!important;left:auto!important;top:auto!important;margin:0!important}
+      </style></head><body>${nodes.map((node) => `<section class="receipt-copy">${node.outerHTML}</section>`).join("")}</body></html>`;
+      document.body.appendChild(frame);
+    } catch (error) { setOutputError(error instanceof Error ? error.message : "Could not print copies."); }
   };
 
   const handleDownloadPdf = async () => {
-    if (!tranWt) return;
+    if (!tranWt || !copyLabels.length) return;
 
     setIsDownloading(true);
+    setOutputError("");
 
     try {
-      const iframe = documentType === "delivery-challan" ? printRef.current : printRefAuth.current;
-      const nodeId = documentType === "delivery-challan" ? "receipt-printable" : "auth-letter-printable";
-      const node = iframe?.contentDocument?.getElementById(nodeId);
+      const nodes = getCopyNodes();
 
       const filename = documentType === "delivery-challan"
         ? `Delivery-Challan-${tranWt.id}.pdf`
         : `Authorization-Letter-${tranWt.id}.pdf`;
 
-      if (node) {
-        await downloadSinglePdf(node, filename);
-      }
+      await downloadCopiesPdf(nodes, filename);
     } catch (error) {
       console.error("Download error:", error);
+      setOutputError(error instanceof Error ? error.message : "Could not download copies.");
     } finally {
       setIsDownloading(false);
     }
@@ -213,90 +246,44 @@ export default function GenerateReceiptPage() {
 
       <Stack gap={5}>
 
-        <VStack
-          gap={4}
-          align="flex-start"
-          className="no-print"
-        >
-          <HStack gap={4} flexWrap="wrap" align="flex-end" w="full">
-            <Box flex="1" minW="240px">
-              <Text asChild fontSize="sm" fontWeight="medium" mb={1} display="block"><label htmlFor="receipt-search">Search transactions</label></Text>
-              <Input
-                id="receipt-search"
-                placeholder="Transaction number or company name"
-                value={search}
-                onChange={(event) => { setSearch(event.target.value); setSelectedId(""); }}
-              />
-            </Box>
-            <Box>
-              <Text asChild fontSize="sm" fontWeight="medium" mb={1} display="block"><label htmlFor="receipt-from-date">From date</label></Text>
-              <Input id="receipt-from-date" type="date" value={fromDate} max={toDate || undefined}
-                onChange={(event) => { setFromDate(event.target.value); setSelectedId(""); }} />
-            </Box>
-            <Box>
-              <Text asChild fontSize="sm" fontWeight="medium" mb={1} display="block"><label htmlFor="receipt-to-date">To date</label></Text>
-              <Input id="receipt-to-date" type="date" value={toDate} min={fromDate || undefined}
-                onChange={(event) => { setToDate(event.target.value); setSelectedId(""); }} />
-            </Box>
-            <Button variant="outline" disabled={!search && !fromDate && !toDate}
-              onClick={() => { setSearch(""); setFromDate(""); setToDate(""); setSelectedId(""); }}>
-              Clear filters
-            </Button>
-          </HStack>
-          {fromDate && toDate && fromDate > toDate && (
-            <Text color="red.600" role="alert">From date must be on or before To date.</Text>
-          )}
-          {listError && (
-            <Text color="red.600" role="alert">
-              {listError instanceof Error ? listError.message : "Could not load transactions."}
-            </Text>
-          )}
-          {!isListLoading && !listError && !(fromDate && toDate && fromDate > toDate) && (
-            <Text fontSize="sm" color="fg.muted" role="status">
-              {options.length === 0 ? "No transactions match your filters." : `${options.length} transaction${options.length === 1 ? "" : "s"} found`}
-            </Text>
-          )}
-          <HStack
-            gap={4}
-            align="flex-end"
-            flexWrap="wrap"
-            w="full"
-          >
-            <Box minW="280px">
-              <Text
-                fontSize="sm"
-                fontWeight="medium"
-                mb={1}
-              >
-                Select transaction
-              </Text>
-
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  value={selectedId}
-                  onChange={(e) =>
-                    setSelectedId(e.target.value)
-                  }
-                  placeholder={
-                    isListLoading
-                      ? "Loading transactions..."
-                      : "Select a transaction"
-                  }
-                >
-                  {options.map((opt) => (
-                    <option
-                      key={opt.value}
-                      value={opt.value}
-                    >
-                      {opt.label}
-                    </option>
-                  ))}
-                </NativeSelect.Field>
-
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Box>
-
+        <HStack gap={3} align="flex-end" flexWrap="wrap" className="no-print">
+          <Box flex="1" minW="240px">
+            <Combobox.Root
+              collection={createListCollection({ items: options })}
+              value={selectedId ? [selectedId] : []}
+              onInputValueChange={(details) => {
+                if (details.reason === "input-change" || details.reason === "clear-trigger") {
+                  setSearch(details.inputValue);
+                  setSelectedId("");
+                }
+              }}
+              onValueChange={(details) => setSelectedId(details.value[0] ?? "")}
+              openOnClick
+            >
+              <Combobox.Label fontSize="sm" fontWeight="medium">Search and select transaction</Combobox.Label>
+              <Combobox.Control>
+                <Combobox.Input placeholder="Transaction number or company name" />
+                <Combobox.IndicatorGroup>
+                  <Combobox.ClearTrigger />
+                  <Combobox.Trigger />
+                </Combobox.IndicatorGroup>
+              </Combobox.Control>
+              <Portal>
+                <Combobox.Positioner>
+                  <Combobox.Content maxH="280px" overflowY="auto">
+                    {isListLoading ? <Text p={3}>Loading transactions...</Text> : listError ? (
+                      <Text p={3} color="red.600" role="alert">Could not load transactions.</Text>
+                    ) : options.length ? options.map((option) => (
+                      <Combobox.Item key={option.value} item={option}>
+                        <Combobox.ItemText>{option.label}</Combobox.ItemText>
+                        <Combobox.ItemIndicator />
+                      </Combobox.Item>
+                    )) : <Text p={3}>No transactions found.</Text>}
+                  </Combobox.Content>
+                </Combobox.Positioner>
+              </Portal>
+            </Combobox.Root>
+          </Box>
             <Box minW="200px">
               <Text
                 fontSize="sm"
@@ -326,7 +313,7 @@ export default function GenerateReceiptPage() {
                 aria-label="Print"
                 title="Print"
                 onClick={handlePrint}
-                disabled={!tranWt}
+                disabled={!tranWt || !copyLabels.length || isDownloading}
                 variant="ghost"
                 color="gray.800"
                 _dark={{ color: "gray.100" }}
@@ -338,7 +325,7 @@ export default function GenerateReceiptPage() {
                 aria-label="Download PDF"
                 title="Download PDF"
                 onClick={handleDownloadPdf}
-                disabled={!tranWt || isDownloading}
+                disabled={!tranWt || !copyLabels.length || isDownloading}
                 loading={isDownloading}
                 variant="ghost"
                 color="gray.800"
@@ -348,8 +335,9 @@ export default function GenerateReceiptPage() {
               </IconButton>
             </HStack>
           </HStack>
-        </VStack>
 
+        <Text className="no-print" fontSize="sm" color="fg.muted">{copyLabels.length ? `Print and PDF include: ${copyLabels.map((label) => label.name).join(" / ")}` : "Add copy labels in Copy Labels to print or download."}</Text>
+        {outputError && <Text role="alert" color="red.600" className="no-print">{outputError}</Text>}
         {!selectedId && (
           <Text
             color="fg.muted"
@@ -371,10 +359,14 @@ export default function GenerateReceiptPage() {
 
         {tranWt && (
           <>
+            {copyLabels.map((label, index) => (
+            <Box key={label.id}>
+            <Text className="no-print" fontWeight="semibold" mb={2}>{label.name}</Text>
             <div style={{ display: documentType === "delivery-challan" ? "block" : "none" }}>
               <DeliveryChallan
                 tranWt={tranWt}
-                printRef={printRef}
+                printRef={index === 0 ? printRef : secondPrintRef}
+                headerRight={label.name}
                 fontSize="large"
               />
             </div>
@@ -382,11 +374,13 @@ export default function GenerateReceiptPage() {
             {tranWt && authorizationData && (
               <div style={{ display: documentType === "authorization-letter" ? "block" : "none" }}>
                 <AuthorizationLetter
-                  data={authorizationData}
-                  printRef={printRefAuth}
+                  data={{ ...authorizationData, headerRight: label.name }}
+                  printRef={index === 0 ? printRefAuth : secondPrintRefAuth}
                 />
               </div>
             )}
+            </Box>
+            ))}
           </>
         )}
 

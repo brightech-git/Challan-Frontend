@@ -12,6 +12,7 @@ interface DeliveryChallanProps {
   tranWt: TranWt;
   printRef: RefObject<HTMLIFrameElement | null>;
   fontSize?: ChallanFontSize;
+  headerRight?: string;
 }
 
 const DELIVERY_FORM_TEMPLATE_ID = "DELIVERYFORM";
@@ -20,19 +21,21 @@ export default function DeliveryChallan({
   tranWt,
   printRef,
   fontSize = "large",
+  headerRight,
 }: DeliveryChallanProps) {
   const { data: format, isLoading, isError } = useChallanFormat(
     DELIVERY_FORM_TEMPLATE_ID
   );
 
+  const content = format?.content;
   const srcDoc = useMemo(() => {
-    if (!format?.content) return null;
+    if (!content) return null;
     return injectTemplateData(
-      format.content,
-      { ...tranWt, fontSize },
+      content,
+      { ...tranWt, fontSize, headerRight },
       { varName: "tranWt", logoClass: "logo-symbol" }
     );
-  }, [format?.content, tranWt, fontSize]);
+  }, [content, tranWt, fontSize, headerRight]);
 
   if (isLoading) {
     return (

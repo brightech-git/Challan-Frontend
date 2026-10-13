@@ -6,6 +6,7 @@ import { useChallanFormat } from "@/hooks";
 import { injectTemplateData } from "./challanTemplate";
 
 export interface AuthorizationLetterData {
+  headerRight?: string;
   date: string | Date | null | undefined;
   jurisdiction?: string;
 
@@ -53,13 +54,14 @@ export default function AuthorizationLetter({
 }: AuthorizationLetterProps) {
   const { data: format, isLoading, isError } = useChallanFormat(AUTH_FORM_TEMPLATE_ID);
 
+  const content = format?.content;
   const srcDoc = useMemo(() => {
-    if (!format?.content) return null;
-    return injectTemplateData(format.content, data, {
+    if (!content) return null;
+    return injectTemplateData(content, data, {
       varName: "data",
       logoClass: "letter-logo",
     });
-  }, [format?.content, data]);
+  }, [content, data]);
 
   if (isLoading) {
     return (
