@@ -232,7 +232,7 @@ export function DataTable<T>({
                             <LuPencil />
                           </IconButton>
                         )}
-                        {onDelete && (
+                        {/* {onDelete && (
                           <IconButton
                             aria-label="Delete"
                             size="xs"
@@ -242,7 +242,7 @@ export function DataTable<T>({
                           >
                             <LuTrash2 />
                           </IconButton>
-                        )}
+                        )} */}
                       </HStack>
                     </Table.Cell>
                   )}

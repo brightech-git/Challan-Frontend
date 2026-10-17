@@ -11,6 +11,7 @@ export interface AuthorizationLetterData {
   jurisdiction?: string;
 
   carrierName: string;
+  carrierAddress?: string;
   sentDate: string | Date | null | undefined;
   destination: string;
 

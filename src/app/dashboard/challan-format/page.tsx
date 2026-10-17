@@ -80,6 +80,7 @@ export default function ChallanFormatPage() {
       date: transaction.tranDate,
       jurisdiction: "Chennai",
       carrierName: to?.companyName ?? transaction.toCompanyId,
+      carrierAddress: address(to),
       sentDate: transaction.tranDate,
       destination: address(to),
       goldWeight: transaction.netWt,

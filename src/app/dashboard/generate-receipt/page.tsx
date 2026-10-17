@@ -66,6 +66,9 @@ export default function GenerateReceiptPage() {
       date: tranWt.tranDate,
       jurisdiction: "Chennai",
       carrierName: to?.companyName ?? tranWt.toCompanyId ?? "—",
+      carrierAddress: [to?.address1, to?.address2, to?.address3, to?.address4]
+        .filter(Boolean)
+        .join(", "),
       sentDate: tranWt.tranDate,
       destination: [to?.address1, to?.address2, to?.address3, to?.address4]
         .filter(Boolean)
