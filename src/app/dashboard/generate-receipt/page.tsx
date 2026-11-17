@@ -20,9 +20,10 @@ import { useTranWt, useTranWts } from "@/hooks";
 import { amountInWords } from "@/lib/numberToWords";
 import DeliveryChallan from "./DeliveryChallan";
 import AuthorizationLetter from "./AuthorizationLetter";
+import CompanyForm from "./CompanyForm";
 import { useCopyLabels } from "@/hooks/useCopyLabels";
 
-type DocumentType = "delivery-challan" | "authorization-letter";
+type DocumentType = "delivery-challan" | "authorization-letter" | "company-form";
 
 export default function GenerateReceiptPage() {
   const [selectedId, setSelectedId] = useState<string>("");
@@ -39,6 +40,14 @@ export default function GenerateReceiptPage() {
   const printRefAuth = useRef<HTMLIFrameElement>(null);
   const secondPrintRef = useRef<HTMLIFrameElement>(null);
   const secondPrintRefAuth = useRef<HTMLIFrameElement>(null);
+  const printRefCompany = useRef<HTMLIFrameElement>(null);
+  const secondPrintRefCompany = useRef<HTMLIFrameElement>(null);
+
+  const documentCopies = {
+    "delivery-challan": { refs: [printRef, secondPrintRef], nodeId: "receipt-printable", filename: "Delivery-Challan" },
+    "authorization-letter": { refs: [printRefAuth, secondPrintRefAuth], nodeId: "auth-letter-printable", filename: "Authorization-Letter" },
+    "company-form": { refs: [printRefCompany, secondPrintRefCompany], nodeId: "company-form-printable", filename: "Company-Form" },
+  };
   
   const { data: tranWts, isLoading: isListLoading, error: listError } = useTranWts(search.trim() || undefined);
   const { data: tranWt, isLoading: isDetailLoading } = useTranWt(
@@ -107,7 +116,7 @@ export default function GenerateReceiptPage() {
     for (const [index, node] of nodes.entries()) {
     await node.ownerDocument.fonts.ready;
     await Promise.all(Array.from(node.querySelectorAll("img")).map((img) => img.decode().catch(() => undefined)));
-    node.style.display = 'block';
+    node.style.display = documentType === "company-form" ? "flex" : "block";
     node.style.visibility = 'visible';
     node.style.opacity = '1';
 
@@ -125,7 +134,7 @@ export default function GenerateReceiptPage() {
       onclone: (clonedDoc) => {
         const clonedElement = clonedDoc.getElementById(node.id || 'receipt-printable');
         if (clonedElement) {
-          clonedElement.style.display = 'block';
+          clonedElement.style.display = documentType === "company-form" ? "flex" : "block";
           clonedElement.style.visibility = 'visible';
           clonedElement.style.opacity = '1';
         }
@@ -168,8 +177,7 @@ export default function GenerateReceiptPage() {
   };
 
   const getCopyNodes = () => {
-    const refs = documentType === "delivery-challan" ? [printRef, secondPrintRef] : [printRefAuth, secondPrintRefAuth];
-    const nodeId = documentType === "delivery-challan" ? "receipt-printable" : "auth-letter-printable";
+    const { refs, nodeId } = documentCopies[documentType];
     return copyLabels.map((_, index) => {
       const frame = refs[index].current;
       const node = frame?.contentDocument?.getElementById(nodeId);
@@ -204,7 +212,7 @@ export default function GenerateReceiptPage() {
         .receipt-copy{position:relative!important;display:block!important;width:210mm;height:297mm;break-inside:avoid;page-break-inside:avoid;break-after:page;page-break-after:always;visibility:visible!important}
         .receipt-copy:last-child{break-after:auto;page-break-after:auto}
         .receipt-copy *{visibility:visible!important}
-        .receipt-copy > #receipt-printable,.receipt-copy > #auth-letter-printable{position:relative!important;left:auto!important;top:auto!important;margin:0!important}
+        .receipt-copy > #receipt-printable,.receipt-copy > #auth-letter-printable,.receipt-copy > #company-form-printable{position:relative!important;left:auto!important;top:auto!important;margin:0!important}
       </style></head><body>${nodes.map((node) => `<section class="receipt-copy">${node.outerHTML}</section>`).join("")}</body></html>`;
       document.body.appendChild(frame);
     } catch (error) { setOutputError(error instanceof Error ? error.message : "Could not print copies."); }
@@ -219,9 +227,7 @@ export default function GenerateReceiptPage() {
     try {
       const nodes = getCopyNodes();
 
-      const filename = documentType === "delivery-challan"
-        ? `Delivery-Challan-${tranWt.id}.pdf`
-        : `Authorization-Letter-${tranWt.id}.pdf`;
+      const filename = `${documentCopies[documentType].filename}-${tranWt.id}.pdf`;
 
       await downloadCopiesPdf(nodes, filename);
     } catch (error) {
@@ -242,7 +248,7 @@ export default function GenerateReceiptPage() {
         <HStack gap={3}>
           <Image src="/icon.png" alt="Challan logo" boxSize="44px" borderRadius="md" />
           <Text fontSize="sm" color="fg.muted">
-            Generate Delivery Challan or Authorization Letter
+            Generate Delivery Challan, Authorization Letter or Company Form
           </Text>
         </HStack>
       </HStack>
@@ -305,6 +311,7 @@ export default function GenerateReceiptPage() {
                 >
                   <option value="delivery-challan">Delivery Challan</option>
                   <option value="authorization-letter">Authorization Letter</option>
+                  <option value="company-form">Company Form</option>
                 </NativeSelect.Field>
 
                 <NativeSelect.Indicator />
@@ -382,6 +389,10 @@ export default function GenerateReceiptPage() {
                 />
               </div>
             )}
+            <div style={{ display: documentType === "company-form" ? "block" : "none" }}>
+              <CompanyForm tranWt={tranWt}
+                printRef={index === 0 ? printRefCompany : secondPrintRefCompany} />
+            </div>
             </Box>
             ))}
           </>

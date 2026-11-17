@@ -101,7 +101,7 @@ export default function ChallanFormatPage() {
       },
     };
     const delivery = { ...transaction, fromCompanyDetails: from, headerRight, fontSize: "large" };
-    const isDelivery = /\b(?:const|let|var)\s+tranWt\s*=/.test(previewContent) || editing?.id === "DELIVERYFORM";
+    const isDelivery = /\b(?:const|let|var)\s+tranWt\s*=/.test(previewContent) || editing?.id === "DELIVERYFORM" || editing?.id === "COMPANYFORM";
     const html = injectTemplateData(previewContent, isDelivery ? delivery : authorization, {
       varName: isDelivery ? "tranWt" : "data",
       logoClass: isDelivery ? "logo-symbol" : "letter-logo",

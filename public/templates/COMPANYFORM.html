@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Company Form</title>
+  <!-- Upload this entire document as Challan Format content, ID: COMPANYFORM.
+       The app injects the selected transaction into `tranWt` below.
+       Optional standalone preview: ?data=<URL-encoded transaction JSON>. -->
+  <style>
+    @font-face {
+      font-family: Poppins;
+      src: url('/fonts/Poppins/Poppins-Regular.ttf') format('truetype');
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: Poppins;
+      src: url('/fonts/Poppins/Poppins-SemiBold.ttf') format('truetype');
+      font-weight: 600;
+      font-display: swap;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #fff;
+      color: #17243a;
+      font-family: Poppins, Arial, sans-serif;
+      font-size: 10px;
+    }
+    #company-form-printable {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 12mm;
+      background: #fff;
+    }
+    .companies { display: flex; align-items: flex-start; gap: 10mm; width: 100%; }
+    .company-card { flex: 1; min-width: 0; }
+    h2 {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin: 0 0 8px;
+      color: #526179;
+    }
+    h3 { font-size: 12px; font-weight: 600; margin: 0 0 10px; line-height: 1.6; overflow-wrap: anywhere; }
+    dl { margin: 0; }
+    .detail-row {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+      gap: 6px;
+      padding: 3px 0;
+      line-height: 1.6;
+      break-inside: avoid;
+    }
+    dt { color: #526179; }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    @page { size: A4; margin: 0; }
+    @media print {
+      html, body { width: 210mm; }
+      #company-form-printable { margin: 0; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main id="company-form-printable">
+    <div class="companies">
+      <section id="from-company" class="company-card" aria-label="From company"></section>
+      <section id="to-company" class="company-card" aria-label="To company"></section>
+    </div>
+  </main>
+  <script>
+    function loadDataFromUrl() {
+      try {
+        const value = new URLSearchParams(window.location.search).get("data");
+        const data = value ? JSON.parse(value) : {};
+        return data && typeof data === "object" && !Array.isArray(data) ? data : {};
+      } catch {
+        return {};
+      }
+    }
+
+    // Keep this assignment for the app's shared template injection helper.
+    const tranWt = loadDataFromUrl();
+
+    function hasValue(value) {
+      return value !== null && value !== undefined && String(value).trim() !== "";
+    }
+
+    function firstValue() {
+      return Array.from(arguments).find(hasValue);
+    }
+
+    function renderCompany(targetId, title, company, companyId, companyName) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      company = company && typeof company === "object" ? company : {};
+      const name = firstValue(company.companyName, companyName, company.companyId, companyId);
+      const address = [company.address1, company.address2, company.address3, company.address4]
+        .filter(hasValue).map(value => String(value).trim()).join(", ");
+      const rows = [
+        ["Company ID", firstValue(company.companyId, companyId)],
+        ["Address", address],
+        ["Phone", company.phone],
+        ["Email", company.email],
+        ["GST No.", company.gstNo],
+        ["PAN No.", company.panNo],
+        ["CIN No.", company.cinNo],
+        ["TAN No.", company.tanNo],
+        ["State", firstValue(company.stateCode, company.stateId)]
+      ].filter(row => hasValue(row[1]));
+
+      // Missing company data produces no labels or placeholder values.
+      if (!hasValue(name) && !rows.length) return;
+      const heading = document.createElement("h2");
+      heading.textContent = title;
+      target.appendChild(heading);
+      if (hasValue(name)) {
+        const companyHeading = document.createElement("h3");
+        companyHeading.textContent = String(name);
+        target.appendChild(companyHeading);
+      }
+      const details = document.createElement("dl");
+      rows.forEach(([label, value]) => {
+        const row = document.createElement("div");
+        row.className = "detail-row";
+        const term = document.createElement("dt");
+        term.textContent = label;
+        const detail = document.createElement("dd");
+        detail.textContent = String(value);
+        row.append(term, detail);
+        details.appendChild(row);
+      });
+      target.appendChild(details);
+    }
+
+    renderCompany("from-company", "From Company", tranWt.fromCompanyDetails, tranWt.fromCompanyId, tranWt.fromCompanyName);
+    renderCompany("to-company", "To Company", tranWt.toCompanyDetails, tranWt.toCompanyId, tranWt.toCompanyName);
+  </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
-// Shared helper for the AUTHFORM / DELIVERYFORM templates fetched from the
-// ChallanFormat API. Both are full standalone HTML documents whose scripts
+// Shared helper for AUTHFORM / DELIVERYFORM / COMPANYFORM fetched from the
+// ChallanFormat API. These are standalone HTML documents whose scripts
 // declare `const <varName> = loadDataFromUrl();` and read everything else
 // off that object; `loadDataFromUrl()` itself falls back to reading a
 // `?data=<json>` query string, which is also what their built-in "Build a
