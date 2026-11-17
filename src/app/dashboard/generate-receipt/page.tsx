@@ -3,11 +3,13 @@
 import { useMemo, useRef, useState } from "react";
 import {
   Box,
+  Button,
   Combobox,
   Center,
   HStack,
   IconButton,
   Image,
+  Input,
   Portal,
   NativeSelect,
   Spinner,
@@ -22,6 +24,10 @@ import DeliveryChallan from "./DeliveryChallan";
 import AuthorizationLetter from "./AuthorizationLetter";
 import CompanyForm from "./CompanyForm";
 import { useCopyLabels } from "@/hooks/useCopyLabels";
+import { useQueryClient } from "@tanstack/react-query";
+import { tranWtService } from "@/services";
+import { getErrorMessage, toast } from "@/lib/toast";
+import type { TranWt } from "@/types";
 
 type DocumentType = "delivery-challan" | "authorization-letter" | "company-form";
 
@@ -33,6 +39,10 @@ export default function GenerateReceiptPage() {
   const [documentType, setDocumentType] = useState<DocumentType>("delivery-challan");
   const [isDownloading, setIsDownloading] = useState(false);
   const [outputError, setOutputError] = useState("");
+  const [partyDraft, setPartyDraft] = useState<{ id: number; value: string } | null>(null);
+  const [savingParty, setSavingParty] = useState(false);
+  const partySaveRef = useRef<Promise<boolean> | null>(null);
+  const queryClient = useQueryClient();
   const { labels } = useCopyLabels();
   const copyLabels = labels.slice(0, 2);
   
@@ -53,6 +63,40 @@ export default function GenerateReceiptPage() {
   const { data: tranWt, isLoading: isDetailLoading } = useTranWt(
     selectedId ? Number(selectedId) : null
   );
+  const partyName = partyDraft?.id === tranWt?.id ? partyDraft?.value ?? "" : tranWt?.partyName ?? "";
+  const partyChanged = !!tranWt && partyName.trim() !== (tranWt.partyName ?? "").trim();
+
+  const savePartyName = async (): Promise<boolean> => {
+    if (partySaveRef.current) return partySaveRef.current;
+    if (!tranWt) return false;
+    if (!partyChanged) return true;
+    const transaction = tranWt;
+    const name = partyName.trim();
+    setSavingParty(true);
+    const request = (async () => {
+      try {
+        const updated = await tranWtService.updatePartyName(transaction.id, name);
+        if (!updated) throw new Error("Transaction update returned no data.");
+        queryClient.setQueryData<TranWt>(["tranWts", transaction.id], (previous) => ({
+          ...transaction, ...previous, ...updated, partyName: name,
+        }));
+        setPartyDraft({ id: transaction.id, value: name });
+        void queryClient.invalidateQueries({ queryKey: ["tranWts"] });
+        toast.success("Party name saved", `Updated transaction #${transaction.id}.`);
+        return true;
+      } catch (error) {
+        const message = getErrorMessage(error);
+        setOutputError(message);
+        toast.error("Could not save party name", message);
+        return false;
+      } finally {
+        setSavingParty(false);
+        partySaveRef.current = null;
+      }
+    })();
+    partySaveRef.current = request;
+    return request;
+  };
 
   const options = useMemo(
     () =>
@@ -72,6 +116,7 @@ export default function GenerateReceiptPage() {
     const to = tranWt.toCompanyDetails;
 
     return {
+      partyName: partyName.trim(),
       date: tranWt.tranDate,
       jurisdiction: "Chennai",
       carrierName: to?.companyName ?? tranWt.toCompanyId ?? "—",
@@ -104,7 +149,7 @@ export default function GenerateReceiptPage() {
         centreNo: null,
       },
     };
-  }, [tranWt]);
+  }, [tranWt, partyName]);
 
   const downloadCopiesPdf = async (nodes: HTMLElement[], filename: string) => {
     const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
@@ -158,11 +203,14 @@ export default function GenerateReceiptPage() {
         // has nothing for text-decoration to underline, so it would render
         // with no line at all; its border-bottom never collided with any
         // glyphs in the first place, so it's left alone.
-        clonedElement?.querySelectorAll<HTMLElement>(".fill-line-bold").forEach((el) => {
+        clonedElement?.querySelectorAll<HTMLElement>(".fill-line-bold, #carrierDetailsAtTo").forEach((el) => {
           if (!el.textContent || !el.textContent.trim()) return;
-          el.style.borderBottom = "none";
-          el.style.textDecoration = "underline";
-          el.style.textUnderlineOffset = "3px";
+          // AUTHFORM's address border uses !important, which overrides a
+          // normal inline borderBottom assignment. Override its priority too.
+          el.style.setProperty("border-bottom", "none", "important");
+          el.style.setProperty("text-decoration", "underline", "important");
+          el.style.setProperty("text-decoration-color", "#000", "important");
+          el.style.setProperty("text-underline-offset", "3px", "important");
         });
       }
     });
@@ -182,13 +230,18 @@ export default function GenerateReceiptPage() {
       const frame = refs[index].current;
       const node = frame?.contentDocument?.getElementById(nodeId);
       if (!node || frame?.contentDocument?.readyState !== "complete") throw new Error("Copies are still loading. Please try again.");
+      if (documentType === "authorization-letter") {
+        const field = node.querySelector("#carrierNameBlank");
+        if (field) field.textContent = partyName.trim() || "________________________";
+      }
       return node;
     });
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!tranWt || !copyLabels.length) return;
     setOutputError("");
+    if (documentType === "authorization-letter" && !(await savePartyName())) return;
     try {
       const nodes = getCopyNodes();
       const frame = document.createElement("iframe");
@@ -225,6 +278,7 @@ export default function GenerateReceiptPage() {
     setOutputError("");
 
     try {
+      if (documentType === "authorization-letter" && !(await savePartyName())) return;
       const nodes = getCopyNodes();
 
       const filename = `${documentCopies[documentType].filename}-${tranWt.id}.pdf`;
@@ -258,6 +312,7 @@ export default function GenerateReceiptPage() {
         <HStack gap={3} align="flex-end" flexWrap="wrap" className="no-print">
           <Box flex="1" minW="240px">
             <Combobox.Root
+              disabled={savingParty || isDownloading}
               collection={createListCollection({ items: options })}
               value={selectedId ? [selectedId] : []}
               onInputValueChange={(details) => {
@@ -302,7 +357,7 @@ export default function GenerateReceiptPage() {
                 Document Type
               </Text>
 
-              <NativeSelect.Root>
+              <NativeSelect.Root disabled={savingParty || isDownloading}>
                 <NativeSelect.Field
                   value={documentType}
                   onChange={(e) =>
@@ -318,12 +373,27 @@ export default function GenerateReceiptPage() {
               </NativeSelect.Root>
             </Box>
 
+            {documentType === "authorization-letter" && (
+              <Box minW="240px" flex="1">
+                <Text asChild fontSize="sm" fontWeight="medium" display="block" mb={1}><label htmlFor="party-name">Party Name</label></Text>
+                <HStack gap={2}>
+                  <Input id="party-name" placeholder="Enter authorised person's name" value={partyName}
+                    disabled={!tranWt || savingParty || isDownloading}
+                    onChange={(event) => { if (tranWt) setPartyDraft({ id: tranWt.id, value: event.target.value }); setOutputError(""); }}
+                    onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); void savePartyName(); } }} />
+                  <Button size="sm" colorPalette="blue" loading={savingParty} disabled={!partyChanged || isDownloading}
+                    onClick={() => { void savePartyName(); }}>Save</Button>
+                </HStack>
+                <Text fontSize="xs" color="fg.muted" mt={1}>Press Enter or Save. Print/PDF also saves this name.</Text>
+              </Box>
+            )}
+
             <HStack gap={2}>
               <IconButton
                 aria-label="Print"
                 title="Print"
                 onClick={handlePrint}
-                disabled={!tranWt || !copyLabels.length || isDownloading}
+                disabled={!tranWt || !copyLabels.length || isDownloading || savingParty}
                 variant="ghost"
                 color="gray.800"
                 _dark={{ color: "gray.100" }}
@@ -335,7 +405,7 @@ export default function GenerateReceiptPage() {
                 aria-label="Download PDF"
                 title="Download PDF"
                 onClick={handleDownloadPdf}
-                disabled={!tranWt || !copyLabels.length || isDownloading}
+                disabled={!tranWt || !copyLabels.length || isDownloading || savingParty}
                 loading={isDownloading}
                 variant="ghost"
                 color="gray.800"

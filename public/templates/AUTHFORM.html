@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Authorisation for Transportation of Goods</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px 0;
+      background: #e5e5e5;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .letter-page {
+      position: relative;
+      width: 210mm;
+      height: 297mm;
+      min-width: 210mm;
+      max-width: 210mm;
+      min-height: 297mm;
+      max-height: 297mm;
+      margin: 0 auto;
+      padding: 10mm 14mm 25mm 14mm;
+      background: #fff;
+      color: #000;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13.5px;
+      line-height: 1.7;
+      overflow: hidden;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .letter-page * {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .letter-header {
+      position: relative;
+      width: 100%;
+      height: 35mm;
+      border-bottom: .5mm solid #555;
+      margin-bottom: 2mm;
+    }
+
+    .company-brand {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3mm;
+      white-space: nowrap;
+    }
+
+    .letter-logo {
+      width: 18mm;
+      height: 18mm;
+      object-fit: contain;
+      border-radius: 50%;
+    }
+
+    .brand-text {
+      text-align: center;
+    }
+
+    .company-name {
+      font-size: 22px;
+      font-weight: bold;
+      line-height: 1.1;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+
+    .company-subtitle {
+      margin-top: 1.5mm;
+      font-size: 9px;
+      font-weight: bold;
+      letter-spacing: .5px;
+    }
+
+    .header-left-info {
+      position: absolute;
+      left: 0;
+      top: 20mm;
+      width: 68mm;
+      font-size: 10.5px;
+      line-height: 1.8;
+    }
+
+    .header-left-info div,
+    .header-right-info div {
+      display: grid;
+      grid-template-columns: 18mm 1fr;
+      column-gap: 1mm;
+      white-space: nowrap;
+    }
+
+    .header-left-info span,
+    .header-right-info span {
+      text-align: right;
+      font-weight: normal;
+    }
+
+    .header-left-info strong,
+    .header-right-info strong {
+      font-weight: normal;
+      text-align: left;
+    }
+
+    .header-right-info {
+      position: absolute;
+      right: 0;
+      top: 20mm;
+      width: 55mm;
+      font-size: 10.5px;
+      line-height: 1.8;
+    }
+
+    .subject-line {
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      margin-top: 6mm;
+      margin-bottom: 2.5mm;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .authorization-title {
+      text-align: center;
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 1.5mm;
+      margin-bottom: 2.5mm;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    .to-whom {
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+      text-decoration: underline;
+      margin-bottom: 8mm;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .letter-content {
+      font-size: 13.5px;
+      line-height: 1.8;
+      font-weight: 500;
+    }
+
+    .letter-content p {
+      margin: 0 0 6mm 0;
+      text-align: justify;
+      word-spacing: 1px;
+    }
+
+    .first-paragraph {
+      word-spacing: 1.5px;
+      letter-spacing: .3px;
+      overflow-wrap: break-word;
+    }
+
+    .first-paragraph .fill-line-bold {
+      display: inline;
+      border-bottom: .4mm solid #000;
+      padding: 0 2mm;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+
+    #carrierDetailsAtTo {
+      display: inline !important;
+      font-weight: 700 !important;
+      border-bottom: .4mm solid #000 !important;
+      padding: 0 2mm;
+      line-height: 1.5;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+      white-space: normal;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+
+    .fill-line-bold {
+      display: inline-block;
+      font-weight: 700;
+      border-bottom: .4mm solid #000;
+      padding: 0 3mm;
+      line-height: 1.3;
+      min-width: 20mm;
+      font-size: 13.5px;
+      letter-spacing: .3px;
+    }
+
+    .details-block {
+      margin-top: 6mm;
+      font-size: 13.5px;
+      font-weight: 500;
+    }
+
+    .label-normal {
+      font-weight: normal;
+      white-space: nowrap;
+    }
+
+    .value-underline {
+      border-bottom: .4mm solid #000;
+      padding: 0 3mm;
+      min-width: 25mm;
+      display: inline-block;
+      font-weight: 700;
+    }
+
+    .detail-row-single,
+    .words-row-single,
+    .invoice-row-single {
+      display: flex;
+      align-items: baseline;
+      gap: 2mm;
+      margin-bottom: 5mm;
+      flex-wrap: wrap;
+      white-space: nowrap;
+    }
+
+    .words-row-single .value-underline {
+      min-width: 50mm;
+      flex: 1;
+    }
+
+    .invoice-row-single .value-underline {
+      min-width: 18mm;
+    }
+
+    .signature-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 15mm;
+      margin-top: 22mm;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .carrier-signature {
+      position: relative;
+    }
+
+    .carrier-signature div:first-child {
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .carrier-line {
+      width: 50mm;
+      border-bottom: .4mm solid #555;
+      margin-top: 20mm;
+    }
+
+    .company-signature {
+      text-align: center;
+      position: relative;
+    }
+
+    .for-company {
+      font-weight: 700;
+      white-space: nowrap;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    .stamp-area {
+      height: 25mm;
+      margin-top: 1mm;
+    }
+
+    .director-line {
+      display: inline-block;
+      border-top: .4mm solid #555;
+      padding-top: 2mm;
+      min-width: 60mm;
+      text-align: center;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .letter-footer {
+      position: absolute;
+      left: 14mm;
+      right: 14mm;
+      bottom: 8mm;
+      border-top: .4mm solid #555;
+      padding-top: 3mm;
+      text-align: center;
+      font-size: 9px;
+      line-height: 1.8;
+    }
+
+    .letter-footer strong {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    @media screen {
+      .letter-page {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .15);
+      }
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    @media print {
+
+      html,
+      body {
+        width: 210mm !important;
+        height: 297mm !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+      }
+
+      body * {
+        visibility: hidden;
+      }
+
+      #auth-letter-printable,
+      #auth-letter-printable * {
+        visibility: visible;
+      }
+
+      #auth-letter-printable {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 210mm !important;
+        height: 297mm !important;
+        min-width: 210mm !important;
+        max-width: 210mm !important;
+        min-height: 297mm !important;
+        max-height: 297mm !important;
+        margin: 0 !important;
+        padding: 10mm 14mm 25mm 14mm !important;
+        box-shadow: none !important;
+        overflow: hidden !important;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    .print-bar {
+      width: 210mm;
+      margin: 0 auto 10px auto;
+      text-align: right;
+    }
+
+    .print-bar button,
+    .link-builder button {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      padding: 8px 16px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .print-bar button:hover,
+    .link-builder button:hover {
+      background: #333;
+    }
+
+    .link-builder {
+      width: 210mm;
+      margin: 0 auto 10px auto;
+      padding: 10px 12px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .link-builder summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .link-builder textarea {
+      width: 100%;
+      height: 160px;
+      font-family: "Courier New", monospace;
+      font-size: 11px;
+      margin-top: 8px;
+      box-sizing: border-box;
+    }
+
+    .link-builder .lb-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      align-items: center;
+    }
+
+    .link-builder input[type="text"] {
+      flex: 1;
+      font-family: "Courier New", monospace;
+      font-size: 11px;
+      padding: 6px;
+    }
+
+    .link-builder button {
+      font-size: 12px;
+      padding: 6px 12px;
+    }
+
+    .link-builder .lb-msg {
+      margin-top: 6px;
+      color: #b00020;
+    }
+
+    @media screen and (max-width: 900px) {
+
+      .letter-page,
+      .print-bar,
+      .link-builder {
+        margin-left: 0;
+        margin-right: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="print-bar no-print"><button onclick="window.print()">Print / Save as PDF</button></div>
+
+  <details class="link-builder no-print">
+    <summary>Build a link with your own values (JSON)</summary>
+    <p>Edit the JSON below, then click "Generate Link". Any field you omit uses the default. Dates can be any string
+      like <code>"2026-09-22"</code>.</p>
+    <textarea id="lbJson"></textarea>
+    <div class="lb-row">
+      <button type="button" onclick="generateLink()">Generate Link</button>
+      <button type="button" onclick="applyToPage()">Apply to This Page</button>
+      <input type="text" id="lbUrl" readonly placeholder="Generated link will appear here" />
+      <button type="button" onclick="copyLink()">Copy</button>
+    </div>
+    <div class="lb-msg" id="lbMsg"></div>
+  </details>
+
+  <div id="auth-letter-printable" class="letter-page">
+    <div class="letter-header">
+      <div class="company-brand">
+        <img src="icon.png" alt="" class="letter-logo" />
+        <div class="brand-text">
+          <div class="company-name" id="companyName">Jewellery</div>
+          <div class="company-subtitle" id="companySubtitle">&nbsp;</div>
+        </div>
+      </div>
+      <div class="header-left-info" id="headerLeftInfo">
+        <div><span>Email :</span><strong id="companyEmail">—</strong></div>
+        <div><span>Web :</span><strong id="companyWebsite">—</strong></div>
+        <div><span>CIN :</span><strong id="companyCin">—</strong></div>
+      </div>
+      <div class="header-right-info" id="headerRightInfo">
+        <div><span>GSTIN :</span><strong id="companyGst">—</strong></div>
+        <div><span>PAN :</span><strong id="companyPan">—</strong></div>
+        <div><span>Date :</span><strong id="letterDate">—</strong></div>
+      </div>
+    </div>
+
+    <div class="subject-line" id="jurisdictionLine">SUBJECT TO CHENNAI JURISDICTION</div>
+    <div class="authorization-title">AUTHORISATION FOR TRANSPORTATION OF GOODS</div>
+    <div class="to-whom">TO WHOM SO EVER IT MAY CONCERN</div>
+
+    <div class="letter-content">
+      <p class="first-paragraph">
+        This is to certify that Sri/Smt/M/s
+        <span class="fill-line-bold" id="carrierNameBlank">________________________</span>
+        is our Authorized Employee / Logistics / Representative / Director / Customer and the Gold / Gold Ornaments /
+        Cash, detailed below is sent with him on dated
+        <span class="fill-line-bold" id="sentDate">—</span>
+        To
+        <span class="fill-line-bold" id="carrierDetailsAtTo" style="display:inline">________________________</span>
+        for Sample / Approval / Exchange / Manufacture / Repair / Sale / Hallmarking / Bank / Marketing.
+      </p>
+      <p>He carries Ornaments / Fine Gold / Cash as delivered by us / our customer / Gold smith against Order / Job work
+        / Sales / Purchases.</p>
+      <p>Once the goods are selected and approved, Sales Invoice / Purchase Invoice / Job work Invoice will be issued.
+        This details of Gold / Ornaments / Cash are given below.</p>
+
+      <div class="details-block">
+        <div class="detail-row-single">
+          <span class="label-normal">Gold weight :</span>
+          <span class="value-underline" id="goldWeight"></span>
+          <span class="label-normal">Ornaments weight :</span>
+          <span class="value-underline" id="ornamentsWeight">______</span>
+          <span class="label-normal">gm.</span>
+          <span class="label-normal" style="margin-left:6mm">Value :</span>
+          <span class="value-underline" id="cashAmount">______</span>
+        </div>
+        <div class="words-row-single">
+          <span class="label-normal">In (Words) :</span>
+          <span class="value-underline" id="amountInWords">______</span>
+        </div>
+        <div class="invoice-row-single">
+          <span class="label-normal">Tax Invoice / Delivery Challan No :</span>
+          <span class="value-underline" id="invoiceNo">______</span>
+          <span class="label-normal">, Dated :</span>
+          <span class="value-underline" id="invoiceDate">—</span>
+          <span class="label-normal">Respectively.</span>
+        </div>
+      </div>
+
+      <div class="signature-section">
+        <div class="carrier-signature">
+          <div>We attested here with the carrier&apos;s signature.</div>
+          <div class="carrier-line"></div>
+        </div>
+        <div class="company-signature">
+          <div class="for-company" id="forCompanyName">For LAXMI JEWELLERY CHENNAI PVT.LTD.</div>
+          <div class="stamp-area"></div>
+          <div class="director-line">Director / Authorised Signatory</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="letter-footer">
+      <strong id="footerCompanyName">LAXMI JEWELLERY CHENNAI (P) LTD</strong>
+      <div id="branchLine">Branch Off : <span id="branchAddress"></span><span id="branchPhoneWrap"></span></div>
+      <div id="regdLine">Regd. Off : <span id="regdAddress"></span></div>
+      <div>
+        <span id="centreNoWrap"></span>
+        <span id="footerEmailWrap"></span>
+        <span id="footerWebsiteWrap"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const defaultData = {
+      date: new Date(),
+      jurisdiction: "CHENNAI",
+      carrierName: "Ramesh Kumar",
+      carrierAddress: "No. 12, Main Road, Chennai, Tamil Nadu",
+      sentDate: new Date().toISOString().slice(0, 10),
+      // destination is intentionally not used or rendered.
+      goldWeight: null,
+      ornamentsWeight: null,
+      cashAmount: null,
+      amountInWordsText: "",
+      invoiceNo: "",
+      invoiceDate: null,
+      company: {
+        companyName: "LAXMI JEWELLERY CHENNAI PVT.LTD.",
+        subtitle: "",
+        email: "",
+        website: "",
+        cin: "",
+        gstNo: "",
+        panNo: "",
+        branchAddress: "",
+        branchPhone: "",
+        regdAddress: "",
+        centreNo: ""
+      }
+    };
+
+    function loadDataFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("data");
+      if (!raw) return defaultData;
+      try {
+        const parsed = JSON.parse(raw);
+        return {
+          ...defaultData,
+          ...parsed,
+          company: { ...defaultData.company, ...(parsed.company || {}) }
+        };
+      } catch (err) {
+        console.error("Invalid ?data= JSON, falling back to defaults.", err);
+        return defaultData;
+      }
+    }
+    const data = loadDataFromUrl();
+
+    const sampleJson = {
+      date: new Date().toISOString().slice(0, 10),
+      jurisdiction: "CHENNAI",
+      carrierName: "Ramesh Kumar",
+      carrierAddress: "No. 12, Main Road, Chennai, Tamil Nadu", // Replace with the actual carrier address.
+      sentDate: new Date().toISOString().slice(0, 10),
+      goldWeight: 10.5,
+      ornamentsWeight: 25.75,
+      cashAmount: 50000,
+      amountInWordsText: "Fifty Thousand Rupees Only",
+      invoiceNo: "INV-1023",
+      invoiceDate: new Date().toISOString().slice(0, 10),
+      company: {
+        companyName: "LAXMI JEWELLERY CHENNAI PVT.LTD.",
+        subtitle: "Since 1985",
+        email: "info@laxmijewellery.com",
+        website: "www.laxmijewellery.com",
+        cin: "U36911TN2000PTC012345",
+        gstNo: "33AAAAA0000A1Z5",
+        panNo: "AAAAA0000A",
+        branchAddress: "123 Main Street, T Nagar, Chennai",
+        branchPhone: "044-12345678",
+        regdAddress: "456 Registered Office Road, Chennai",
+        centreNo: "CTR-001"
+      }
+    };
+
+    function initLinkBuilder() {
+      const textarea = document.getElementById("lbJson");
+      if (!textarea) return;
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get("data");
+      try {
+        textarea.value = JSON.stringify(raw ? JSON.parse(raw) : sampleJson, null, 2);
+      } catch {
+        textarea.value = JSON.stringify(sampleJson, null, 2);
+      }
+    }
+    function generateLink() {
+      const msgEl = document.getElementById("lbMsg");
+      const urlEl = document.getElementById("lbUrl");
+      msgEl.textContent = "";
+      try {
+        const parsed = JSON.parse(document.getElementById("lbJson").value);
+        const encoded = encodeURIComponent(JSON.stringify(parsed));
+        urlEl.value = window.location.origin + window.location.pathname + "?data=" + encoded;
+      } catch (err) {
+        msgEl.textContent = "Invalid JSON: " + err.message;
+        urlEl.value = "";
+      }
+    }
+    function applyToPage() {
+      const msgEl = document.getElementById("lbMsg");
+      msgEl.textContent = "";
+      try {
+        const parsed = JSON.parse(document.getElementById("lbJson").value);
+        window.location.search = "?data=" + encodeURIComponent(JSON.stringify(parsed));
+      } catch (err) {
+        msgEl.textContent = "Invalid JSON: " + err.message;
+      }
+    }
+    function copyLink() {
+      const urlEl = document.getElementById("lbUrl");
+      if (!urlEl.value) generateLink();
+      if (urlEl.value) {
+        urlEl.select();
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(urlEl.value).catch(() => document.execCommand("copy"));
+        } else {
+          document.execCommand("copy");
+        }
+      }
+    }
+    function dateFormat(date) {
+      if (!date) return "—";
+      const d = new Date(date);
+      if (Number.isNaN(d.getTime())) return String(date);
+      return d.toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+    function shortName(name) {
+      return name ? name.split("-")[0].trim() : null;
+    }
+    function setText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+    function toggleRow(id, value) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const row = el.closest("div");
+      if (value) {
+        el.textContent = value;
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    }
+    function render() {
+      const c = data.company || defaultData.company;
+      setText("companyName", shortName(c.companyName) || "Jewellery");
+      setText("companySubtitle", c.subtitle || "\u00a0");
+
+      toggleRow("companyEmail", c.email);
+      toggleRow("companyWebsite", c.website);
+      toggleRow("companyCin", c.cin);
+      toggleRow("companyGst", c.gstNo);
+      toggleRow("companyPan", c.panNo);
+      setText("letterDate", dateFormat(data.date));
+      setText("jurisdictionLine", "SUBJECT TO " + (data.jurisdiction || "CHENNAI") + " JURISDICTION");
+
+      // Party name fills the first field; the destination company stays after "To".
+      setText("carrierNameBlank", (data.partyName || "").trim() || "________________________");
+      const carrierDetails = [data.carrierName, data.carrierAddress]
+        .filter(value => typeof value === "string" && value.trim())
+        .join(", ");
+      setText("carrierDetailsAtTo", carrierDetails || "________________________");
+      setText("sentDate", dateFormat(data.sentDate));
+
+      setText("goldWeight", data.goldWeight != null ? Number(data.goldWeight).toFixed(3) : "");
+      setText("ornamentsWeight", data.ornamentsWeight != null ? Number(data.ornamentsWeight).toFixed(3) : "______");
+      setText("cashAmount", data.cashAmount != null ? Number(data.cashAmount).toFixed(2) : "______");
+      setText("amountInWords", data.amountInWordsText || "______");
+      setText("invoiceNo", data.invoiceNo || "______");
+      setText("invoiceDate", dateFormat(data.invoiceDate));
+
+      setText("forCompanyName", "For " + (shortName(c.companyName) || "LAXMI JEWELLERY CHENNAI PVT.LTD."));
+      setText("footerCompanyName", shortName(c.companyName) || "LAXMI JEWELLERY CHENNAI (P) LTD");
+
+      const branchLine = document.getElementById("branchLine");
+      if (c.branchAddress) {
+        setText("branchAddress", c.branchAddress);
+        setText("branchPhoneWrap", c.branchPhone ? " , Phone : " + c.branchPhone : "");
+      } else {
+        branchLine.style.display = "none";
+      }
+      const regdLine = document.getElementById("regdLine");
+      if (c.regdAddress) setText("regdAddress", c.regdAddress);
+      else regdLine.style.display = "none";
+
+      setText("centreNoWrap", c.centreNo ? "Centre No. : " + c.centreNo + "  " : "");
+      setText("footerEmailWrap", c.email ? "email : " + c.email + "  " : "");
+      setText("footerWebsiteWrap", c.website ? "website : " + c.website : "");
+    }
+    initLinkBuilder();
+    render();
+  </script>
+</body>
+
+</html>

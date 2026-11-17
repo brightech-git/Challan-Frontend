@@ -39,6 +39,18 @@ export const tranWtService = {
     );
   },
 
+  async updatePartyName(id: number, partyName: string) {
+    // PUT accepts a transaction entity. Reload it first to preserve other fields.
+    const transaction = await tranWtService.getById(id);
+    const responseOnlyFields = new Set([
+      "id", "createdDate", "updatedDate", "fromCompanyDetails", "toCompanyDetails",
+      "fromCompanyName", "toCompanyName", "metalName",
+    ]);
+    const input = Object.fromEntries(Object.entries(transaction)
+      .filter(([key]) => !responseOnlyFields.has(key))) as TranWtInput;
+    return tranWtService.update(id, { ...input, partyName }, transaction.fromCompanyId);
+  },
+
   remove(id: number) {
     return unwrap<void>(apiClient.delete(TRAN_WT.DELETE(id)));
   },

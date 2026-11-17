@@ -75,6 +75,7 @@ export default function ChallanFormatPage() {
     const to = transaction.toCompanyDetails;
     const address = (company: { address1?: string | null; address2?: string | null; address3?: string | null; address4?: string | null } | null | undefined) => [company?.address1, company?.address2, company?.address3, company?.address4].filter(Boolean).join(", ");
     const authorization = {
+      partyName: transaction.partyName ?? "",
       headerRight,
       fromCompanyDetails: from,
       date: transaction.tranDate,

@@ -6,6 +6,7 @@ import { useChallanFormat } from "@/hooks";
 import { injectTemplateData } from "./challanTemplate";
 
 export interface AuthorizationLetterData {
+  partyName?: string | null;
   headerRight?: string;
   date: string | Date | null | undefined;
   jurisdiction?: string;
@@ -85,6 +86,11 @@ export default function AuthorizationLetter({
       ref={printRef}
       title="Authorization Letter"
       srcDoc={srcDoc}
+      onLoad={(event) => {
+        // Older AUTHFORM content explicitly blanks this field in its render().
+        const field = event.currentTarget.contentDocument?.getElementById("carrierNameBlank");
+        if (field) field.textContent = data.partyName?.trim() || "________________________";
+      }}
       style={{
         width: "210mm",
         height: "calc(297mm + 40px)",
