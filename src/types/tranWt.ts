@@ -8,6 +8,11 @@ export interface TranWt {
   id: number;
   fromCompanyId: string;
   toCompanyId: string;
+  fromCompanyName?: string | null;
+  toCompanyName?: string | null;
+  boxWt?: string | number | null;
+  brnNo?: string | null;
+  partyName?: string | null;
   tranDate?: string | null;
   metalId?: string | null;
   description?: string | null;
@@ -43,5 +48,7 @@ export type TranWtInput = Omit<
   | "createdDate"
   | "fromCompanyDetails"
   | "toCompanyDetails"
+  | "fromCompanyName"
+  | "toCompanyName"
   | "metalName"
 >;

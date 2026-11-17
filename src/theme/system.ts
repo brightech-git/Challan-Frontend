@@ -26,9 +26,9 @@ import { brandColors, secondaryColors } from "./colors";
  * just needs `_light`/`_dark` conditions in these tokens to respond to the
  * "dark" class next-themes toggles on <html>.
  *
- * - `fonts.heading`/`fonts.body` are set to Plus Jakarta Sans (loaded via
- *   next/font/google in app/layout.tsx, which exposes it as the
- *   --font-plus-jakarta-sans CSS variable) so every Chakra component uses
+ * - `fonts.heading`/`fonts.body` are set to Poppins (loaded via
+ *   next/font/local in app/layout.tsx, which exposes it as the
+ *   --font-poppins CSS variable) so every Chakra component uses
  *   it — this overrides Chakra's own default of Inter.
  */
 const fallbackFontStack =
@@ -42,8 +42,8 @@ const config = defineConfig({
         secondary: secondaryColors,
       },
       fonts: {
-        heading: { value: `var(--font-plus-jakarta-sans), ${fallbackFontStack}` },
-        body: { value: `var(--font-plus-jakarta-sans), ${fallbackFontStack}` },
+        heading: { value: `var(--font-poppins), ${fallbackFontStack}` },
+        body: { value: `var(--font-poppins), ${fallbackFontStack}` },
       },
     },
     semanticTokens: {

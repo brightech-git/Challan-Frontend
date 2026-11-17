@@ -217,7 +217,7 @@ export default function ChallanFormatPage() {
                       <option value="">{transactionsLoading ? "Loading transactions..." : "No transaction — show template only"}</option>
                       {(transactions ?? []).map((record) => (
                         <option key={record.id} value={String(record.id)}>
-                          #{record.id} — {record.fromCompanyDetails?.companyName ?? record.fromCompanyId} → {record.toCompanyDetails?.companyName ?? record.toCompanyId} ({record.tranDate?.slice(0, 10) ?? "no date"})
+                          #{record.id} — {record.fromCompanyName ?? record.fromCompanyDetails?.companyName ?? record.fromCompanyId} → {record.toCompanyName ?? record.toCompanyDetails?.companyName ?? record.toCompanyId} ({record.tranDate?.slice(0, 10) ?? "no date"})
                         </option>
                       ))}
                     </NativeSelect.Field>

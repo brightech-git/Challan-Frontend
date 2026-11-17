@@ -42,4 +42,5 @@ export const tranWtService = {
   remove(id: number) {
     return unwrap<void>(apiClient.delete(TRAN_WT.DELETE(id)));
   },
+
 };

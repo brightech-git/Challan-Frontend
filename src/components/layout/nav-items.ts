@@ -6,6 +6,7 @@ import {
   LuLayoutDashboard,
   LuPrinter,
   LuReceipt,
+  LuTruck,
   LuUsers,
 } from "react-icons/lu";
 
@@ -25,6 +26,8 @@ export const navItems: NavItem[] = [
   { label: "Metal Master", href: "/dashboard/metal-master", icon: LuGem },
 
   { label: "Transactions", href: "/dashboard/tranwt", icon: LuReceipt },
+  { label: "Logistics", href: "/dashboard/logistics", icon: LuTruck },
+  { label: "Saved Logistics Sheets", href: "/dashboard/logistics-sheets", icon: LuFileText },
   {
     label: "Receipt Generation",
     href: "/dashboard/generate-receipt",
@@ -47,7 +50,7 @@ const pageTitles = [...navItems, ...EXTRA_PAGE_TITLES];
 
 export function isNavItemActive(pathname: string, href: string) {
   return (
-    pathname === href || (href !== "/dashboard" && pathname.startsWith(href))
+    pathname === href || (href !== "/dashboard" && pathname.startsWith(`${href}/`))
   );
 }
 

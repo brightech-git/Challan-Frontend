@@ -4,3 +4,4 @@ export * from "./company";
 export * from "./metalMast";
 export * from "./challanFormat";
 export * from "./tranWt";
+export * from "./logisticsSheet";

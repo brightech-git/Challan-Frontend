@@ -49,8 +49,8 @@ export default function GenerateReceiptPage() {
     () =>
       (tranWts ?? []).map((t) => ({
         value: String(t.id),
-        label: `#${t.id} — ${t.fromCompanyDetails?.companyName ?? t.fromCompanyId} → ${
-          t.toCompanyDetails?.companyName ?? t.toCompanyId
+        label: `#${t.id} — ${t.fromCompanyName ?? t.fromCompanyDetails?.companyName ?? t.fromCompanyId} → ${
+          t.toCompanyName ?? t.toCompanyDetails?.companyName ?? t.toCompanyId
         } (${t.tranDate ? new Date(t.tranDate).toLocaleDateString("en-IN") : "no date"})`,
       })),
     [tranWts]

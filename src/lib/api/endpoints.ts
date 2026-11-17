@@ -75,3 +75,10 @@ export const TRAN_WT = {
   UPDATE: (id: number | string) => `/tranwt/${id}`,
   DELETE: (id: number | string) => `/tranwt/${id}`,
 } as const;
+
+export const LOGISTICS_SHEET = {
+  ROOT: "/logisticsheet",
+  BY_ID: (id: number) => `/logisticsheet/${id}`,
+  ACTIVATE: "/logisticsheet/activate",
+  CLEAR: "/logisticsheet/clear",
+} as const;

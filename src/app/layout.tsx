@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import { Provider } from "@/components/ui/provider";
 import { InlineScript } from "@/components/ui/inline-script";
 import { THEME_INIT_SCRIPT } from "@/lib/theme-storage";
 import "./globals.css";
 
-// App-wide typeface. The CSS variable this creates (--font-plus-jakarta-sans)
-// is what theme/system.ts points Chakra's `heading`/`body` font tokens at,
-// so every Chakra component (Text, Heading, Input, Button, ...) picks it up
-// automatically — see that file's `fonts` block for the other half of this.
-const plusJakartaSans = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta-sans",
-  subsets: ["latin"],
+// Local public assets supply the app-wide Chakra and Tailwind font tokens.
+const poppins = localFont({
+  variable: "--font-poppins",
+  display: "swap",
+  src: [
+    { path: "../../public/fonts/Poppins/Poppins-Regular.ttf", weight: "400", style: "normal" },
+    { path: "../../public/fonts/Poppins/Poppins-Medium.ttf", weight: "500", style: "normal" },
+    { path: "../../public/fonts/Poppins/Poppins-SemiBold.ttf", weight: "600", style: "normal" },
+    { path: "../../public/fonts/Poppins/Poppins-Bold.ttf", weight: "700", style: "normal" },
+    { path: "../../public/fonts/Poppins/Poppins-Italic.ttf", weight: "400", style: "italic" },
+  ],
 });
 
 export const metadata: Metadata = {
@@ -27,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plusJakartaSans.variable} h-full antialiased`}
+      className={`${poppins.variable} h-full antialiased`}
     >
       <head>
         {/* Sets the light/dark class on <html> before first paint, so

@@ -47,12 +47,12 @@ export const REPORT_COLUMNS: ReportColumn[] = [
   {
     key: "fromCompany",
     label: "From",
-    getValue: (r) => r.fromCompanyDetails?.companyName ?? r.fromCompanyId,
+    getValue: (r) => r.fromCompanyName ?? r.fromCompanyDetails?.companyName ?? r.fromCompanyId,
   },
   {
     key: "toCompany",
     label: "To",
-    getValue: (r) => r.toCompanyDetails?.companyName ?? r.toCompanyId,
+    getValue: (r) => r.toCompanyName ?? r.toCompanyDetails?.companyName ?? r.toCompanyId,
   },
   { key: "metal", label: "Metal", getValue: (r) => r.metalName ?? r.metalId ?? "" },
   { key: "hsnCode", label: "HSN Code", getValue: (r) => r.hsnCode ?? "" },

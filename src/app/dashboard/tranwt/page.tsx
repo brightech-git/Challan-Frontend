@@ -36,6 +36,8 @@ import {
   useUpdateTranWt,
 } from "@/hooks";
 import { Company, TranType, TranWt, TranWtInput } from "@/types";
+import { tranWtService } from "@/services";
+import { getErrorMessage, toast } from "@/lib/toast";
 
 /**
  * Transaction / Challan creation page.
@@ -142,6 +144,8 @@ const money = (n: number) =>
 export default function TranWtPage() {
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<TranWt | null>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const editRequestRef = useRef(0);
   const [draft, setDraft] = useState<DraftState>(emptyDraft);
   const [formError, setFormError] = useState<string | null>(null);
   const [savedTransaction, setSavedTransaction] = useState<{ id: number; action: "created" | "updated" } | null>(null);
@@ -250,13 +254,13 @@ export default function TranWtPage() {
         key: "fromCompanyId",
         header: "From",
         width: 160,
-        render: (row) => row.fromCompanyDetails?.companyName ?? row.fromCompanyId,
+        render: (row) => row.fromCompanyName ?? row.fromCompanyDetails?.companyName ?? row.fromCompanyId,
       },
       {
         key: "toCompanyId",
         header: "To",
         width: 160,
-        render: (row) => row.toCompanyDetails?.companyName ?? row.toCompanyId,
+        render: (row) => row.toCompanyName ?? row.toCompanyDetails?.companyName ?? row.toCompanyId,
       },
       {
         key: "metalId",
@@ -289,17 +293,31 @@ export default function TranWtPage() {
   );
 
   const openCreate = () => {
+    editRequestRef.current += 1;
+    setIsLoadingDetail(false);
     setEditing(null);
     setDraft({ ...emptyDraft, header1: headerOptions[0]?.headerName1 ?? "" });
     setFormError(null);
     dialog.setOpen(true);
   };
 
-  const openEdit = (row: TranWt) => {
-    setEditing(row);
-    setDraft(toDraft(row));
-    setFormError(null);
-    dialog.setOpen(true);
+  const openEdit = async (row: TranWt) => {
+    const requestId = ++editRequestRef.current;
+    setIsLoadingDetail(true);
+    try {
+      const transaction = await tranWtService.getById(row.id);
+      if (requestId !== editRequestRef.current) return;
+      setEditing(transaction);
+      setDraft(toDraft(transaction));
+      setFormError(null);
+      dialog.setOpen(true);
+    } catch (error) {
+      if (requestId === editRequestRef.current) {
+        toast.error("Couldn't load transaction", getErrorMessage(error));
+      }
+    } finally {
+      if (requestId === editRequestRef.current) setIsLoadingDetail(false);
+    }
   };
 
   const setField = <K extends keyof DraftState>(key: K, value: DraftState[K]) => {
@@ -443,6 +461,7 @@ export default function TranWtPage() {
 
   return (
     <>
+      {isLoadingDetail && <Text role="status" mb={2}>Loading transaction details...</Text>}
       <DataTable<TranWt>
         columns={columns}
         data={data}
