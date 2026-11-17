@@ -5,6 +5,7 @@ import { Center, Spinner, Text } from "@chakra-ui/react";
 import type { TranWt } from "@/types";
 import { useChallanFormat } from "@/hooks";
 import { injectTemplateData } from "./challanTemplate";
+import { receiptTransaction } from "@/lib/companyAddress";
 
 type ChallanFontSize = "small" | "medium" | "large";
 
@@ -32,7 +33,7 @@ export default function DeliveryChallan({
     if (!content) return null;
     return injectTemplateData(
       content,
-      { ...tranWt, fontSize, headerRight },
+      { ...receiptTransaction(tranWt), fontSize, headerRight },
       { varName: "tranWt", logoClass: "logo-symbol" }
     );
   }, [content, tranWt, fontSize, headerRight]);

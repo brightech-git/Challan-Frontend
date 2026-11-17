@@ -27,7 +27,7 @@
       background: #fff;
       color: #17243a;
       font-family: Poppins, Arial, sans-serif;
-      font-size: 10px;
+      font-size: 14px;
     }
     #company-form-printable {
       width: 210mm;
@@ -45,18 +45,9 @@
       margin: 0 0 8px;
       color: #526179;
     }
-    h3 { font-size: 12px; font-weight: 600; margin: 0 0 10px; line-height: 1.6; overflow-wrap: anywhere; }
-    dl { margin: 0; }
-    .detail-row {
-      display: grid;
-      grid-template-columns: 70px 1fr;
-      gap: 6px;
-      padding: 3px 0;
-      line-height: 1.6;
-      break-inside: avoid;
-    }
-    dt { color: #526179; }
-    dd { margin: 0; overflow-wrap: anywhere; }
+    h3 { font-size: 16px; font-weight: 600; margin: 0 0 4px; line-height: 1.5; overflow-wrap: anywhere; }
+    .courier-address { margin: 0 0 8px; white-space: pre-line; line-height: 1.65; overflow-wrap: anywhere; }
+    .contact-line { margin: 2px 0; line-height: 1.6; overflow-wrap: anywhere; font-size: 12px; }
     @page { size: A4; margin: 0; }
     @media print {
       html, body { width: 210mm; }
@@ -98,22 +89,28 @@
       if (!target) return;
       company = company && typeof company === "object" ? company : {};
       const name = firstValue(company.companyName, companyName, company.companyId, companyId);
-      const address = [company.address1, company.address2, company.address3, company.address4]
-        .filter(hasValue).map(value => String(value).trim()).join(", ");
+      const normalize = value => value.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+      const city = hasValue(company.city) ? String(company.city).trim() : "";
+      // Keep the street/locality together, with the city on a separate line.
+      const addressParts = [company.address1, company.address2, company.address3, company.address4]
+        .filter(hasValue).flatMap(value => String(value).split(/,|\r?\n/))
+        .map(value => value.trim()).filter(value => hasValue(value) && (!city || normalize(value) !== normalize(city)));
+      if (hasValue(company.area)) {
+        const area = String(company.area).trim();
+        if (!(" " + normalize(addressParts.join(" ")) + " ").includes(" " + normalize(area) + " ")) addressParts.push(area);
+      }
+      const address = [addressParts.join(", "), city].filter(hasValue).join("\n");
       const rows = [
-        ["Company ID", firstValue(company.companyId, companyId)],
-        ["Address", address],
         ["Phone", company.phone],
         ["Email", company.email],
         ["GST No.", company.gstNo],
         ["PAN No.", company.panNo],
         ["CIN No.", company.cinNo],
-        ["TAN No.", company.tanNo],
-        ["State", firstValue(company.stateCode, company.stateId)]
+        ["TAN No.", company.tanNo]
       ].filter(row => hasValue(row[1]));
 
       // Missing company data produces no labels or placeholder values.
-      if (!hasValue(name) && !rows.length) return;
+      if (!hasValue(name) && !hasValue(address) && !rows.length) return;
       const heading = document.createElement("h2");
       heading.textContent = title;
       target.appendChild(heading);
@@ -122,22 +119,22 @@
         companyHeading.textContent = String(name);
         target.appendChild(companyHeading);
       }
-      const details = document.createElement("dl");
+      if (hasValue(address)) {
+        const addressBlock = document.createElement("div");
+        addressBlock.className = "courier-address";
+        addressBlock.textContent = address;
+        target.appendChild(addressBlock);
+      }
       rows.forEach(([label, value]) => {
-        const row = document.createElement("div");
-        row.className = "detail-row";
-        const term = document.createElement("dt");
-        term.textContent = label;
-        const detail = document.createElement("dd");
-        detail.textContent = String(value);
-        row.append(term, detail);
-        details.appendChild(row);
+        const line = document.createElement("div");
+        line.className = "contact-line";
+        line.textContent = label + ": " + String(value);
+        target.appendChild(line);
       });
-      target.appendChild(details);
     }
 
-    renderCompany("from-company", "From Company", tranWt.fromCompanyDetails, tranWt.fromCompanyId, tranWt.fromCompanyName);
-    renderCompany("to-company", "To Company", tranWt.toCompanyDetails, tranWt.toCompanyId, tranWt.toCompanyName);
+    renderCompany("from-company", "From", tranWt.fromCompanyDetails, tranWt.fromCompanyId, tranWt.fromCompanyName);
+    renderCompany("to-company", "To", tranWt.toCompanyDetails, tranWt.toCompanyId, tranWt.toCompanyName);
   </script>
 </body>
 </html>

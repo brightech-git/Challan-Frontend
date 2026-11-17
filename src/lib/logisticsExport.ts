@@ -3,9 +3,8 @@ import type { LogisticsSheetDetails } from "@/types/logisticsSheet";
 export interface LogisticsExportGroup { groupId: number; entries: LogisticsSheetDetails[] }
 export interface LogisticsExportMeta { generatedBy: string; generatedAt: Date; filter: string; groupBy?: boolean }
 
-export const logisticsAddress = (row: LogisticsSheetDetails) => [row.toCompanyAddress1, row.toCompanyAddress2, row.toCompanyAddress3]
-  .filter(Boolean).join(", ") || [row.tranWt?.toCompanyDetails?.address1, row.tranWt?.toCompanyDetails?.address2,
-    row.tranWt?.toCompanyDetails?.address3, row.tranWt?.toCompanyDetails?.address4].filter(Boolean).join(", ");
+export const logisticsArea = (row: LogisticsSheetDetails) =>
+  row.toCompanyArea?.trim() || row.tranWt?.toCompanyDetails?.area?.trim() || "";
 
 export const logisticsMetalWeight = (row: LogisticsSheetDetails, metal: "GOLD" | "SILVER") => {
   const name = row.tranWt?.metalName?.toUpperCase();
@@ -13,12 +12,12 @@ export const logisticsMetalWeight = (row: LogisticsSheetDetails, metal: "GOLD" |
   return matches ? row.tranWt?.netWt ?? 0 : 0;
 };
 
-export const logisticsHeaders = ["S.No.", "Date", "From", "To", "Area / Address", "BRN No.", "Challan No.", "Box Wt.", "Gold Wt.", "Silver Wt.", "Status"];
+export const logisticsHeaders = ["S.No.", "Date", "From", "To", "Area", "BRN No.", "Challan No.", "Box Wt.", "Gold Wt.", "Silver Wt.", "Status"];
 export const logisticsExportRow = (row: LogisticsSheetDetails, index: number): (string | number)[] => [
   index + 1, row.tranWt?.tranDate?.slice(0, 10) ?? "—",
   row.fromCompanyName ?? row.tranWt?.fromCompanyDetails?.companyName ?? row.fromCompanyId,
   row.toCompanyName ?? row.tranWt?.toCompanyDetails?.companyName ?? row.toCompanyId,
-  logisticsAddress(row) || "—", row.brnNo == null ? "—" : String(row.brnNo), row.challanId,
+  logisticsArea(row) || "—", row.brnNo == null ? "—" : String(row.brnNo), row.challanId,
   row.boxWt == null ? 0 : Number(row.boxWt), logisticsMetalWeight(row, "GOLD"), logisticsMetalWeight(row, "SILVER"),
   row.active ? "Active" : "Inactive",
 ];

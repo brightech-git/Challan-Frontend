@@ -19,6 +19,7 @@ import { injectAuthorizationTemplate, injectTemplateData } from "../generate-rec
 import { amountInWords } from "@/lib/numberToWords";
 import Link from "next/link";
 import { useCopyLabels } from "@/hooks/useCopyLabels";
+import { formatCompanyAddress, receiptTransaction } from "@/lib/companyAddress";
 
 /**
  * Challan Format CRUD page — follows the same DataTable + DynamicForm-in-Dialog
@@ -87,17 +88,17 @@ export default function ChallanFormatPage() {
       cinNo: transaction.fromCompanyDetails?.cinNo ?? null,
     };
     const to = transaction.toCompanyDetails;
-    const address = (company: { address1?: string | null; address2?: string | null; address3?: string | null; address4?: string | null } | null | undefined) => [company?.address1, company?.address2, company?.address3, company?.address4].filter(Boolean).join(", ");
     const authorization = {
       partyName: previewPartyName.trim(),
       headerRight,
       fromCompanyDetails: from,
+      toCompanyDetails: to,
       date: transaction.tranDate,
       jurisdiction: "Chennai",
       carrierName: to?.companyName ?? transaction.toCompanyId,
-      carrierAddress: address(to),
+      carrierAddress: formatCompanyAddress(to),
       sentDate: transaction.tranDate,
-      destination: address(to),
+      destination: formatCompanyAddress(to),
       goldWeight: transaction.netWt,
       ornamentsWeight: transaction.netWt,
       cashAmount: transaction.total,
@@ -105,17 +106,19 @@ export default function ChallanFormatPage() {
       invoiceNo: String(transaction.id),
       invoiceDate: transaction.tranDate,
       company: {
+        area: from?.area,
+        city: from?.city,
         companyName: from?.companyName,
         subtitle: transaction.header1,
         email: from?.email,
         website: null, cin: from.cinNo, cinNo: from.cinNo,
         gstNo: from?.gstNo, panNo: from?.panNo,
-        branchAddress: [from?.address1, from?.address2].filter(Boolean).join(", "),
+        branchAddress: formatCompanyAddress(from),
         branchPhone: from?.phone,
-        regdAddress: address(from), centreNo: null,
+        regdAddress: formatCompanyAddress(from), centreNo: null,
       },
     };
-    const delivery = { ...transaction, fromCompanyDetails: from, headerRight, fontSize: "large" };
+    const delivery = { ...(normalizedId === "COMPANYFORM" ? transaction : receiptTransaction(transaction)), headerRight, fontSize: "large" };
     const html = isAuthorization ? injectAuthorizationTemplate(previewContent, authorization)
       : injectTemplateData(previewContent, delivery, {
         varName: "tranWt", logoClass: normalizedId === "COMPANYFORM" ? undefined : "logo-symbol",

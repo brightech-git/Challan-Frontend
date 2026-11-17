@@ -23,11 +23,12 @@ export interface LogisticsSheetDetails extends LogisticsSheet {
   fromCompanyAddress2?: string | null;
   fromCompanyAddress3?: string | null;
   toCompanyName?: string | null;
+  toCompanyArea?: string | null;
   toCompanyAddress1?: string | null;
   toCompanyAddress2?: string | null;
   toCompanyAddress3?: string | null;
   tranWt?: TranWt | null;
 }
 
-// Backend BRNNO and BOXWT are BigDecimal(20, 3). Keep strings to avoid rounding.
+// BOXWT is BigDecimal(20, 3). BRN No. is an identifier and may be alphanumeric.
 export const validLogisticsDecimal = (value: string) => /^\d{1,17}(?:\.\d{1,3})?$/.test(value.trim());

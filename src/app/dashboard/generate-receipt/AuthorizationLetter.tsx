@@ -25,6 +25,8 @@ export interface AuthorizationLetterData {
   invoiceDate: string | Date | null | undefined;
 
   company: {
+    area?: string | null;
+    city?: string | null;
     companyName?: string | null;
     subtitle?: string | null;
 

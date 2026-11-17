@@ -38,6 +38,7 @@ import {
 import { Company, TranType, TranWt, TranWtInput } from "@/types";
 import { tranWtService } from "@/services";
 import { getErrorMessage, toast } from "@/lib/toast";
+import CompanyPicker from "./CompanyPicker";
 
 /**
  * Transaction / Challan creation page.
@@ -205,11 +206,11 @@ export default function TranWtPage() {
   const deleteTranWt = useDeleteTranWt();
 
   const fromCompanies = useMemo(
-    () => (activeCompanies ?? []).filter((c) => c.companyType === "FROM"),
+    () => (activeCompanies ?? []).filter((c) => c.companyType === "FROM" || c.companyType === "BOTH"),
     [activeCompanies]
   );
   const toCompanies = useMemo(
-    () => (activeCompanies ?? []).filter((c) => c.companyType === "TO"),
+    () => (activeCompanies ?? []).filter((c) => c.companyType === "TO" || c.companyType === "BOTH"),
     [activeCompanies]
   );
 
@@ -507,20 +508,9 @@ export default function TranWtPage() {
                         <Field.Label>
                           From Company <Field.RequiredIndicator />
                         </Field.Label>
-                        <NativeSelect.Root disabled={!!editing}>
-                          <NativeSelect.Field
-                            value={draft.fromCompanyId}
-                            onChange={(e) => setField("fromCompanyId", e.target.value)}
-                            placeholder="Select from company"
-                          >
-                            {(fromCompanies ?? []).map((c) => (
-                              <option key={c.companyId} value={c.companyId}>
-                                {c.companyName}
-                              </option>
-                            ))}
-                          </NativeSelect.Field>
-                          <NativeSelect.Indicator />
-                        </NativeSelect.Root>
+                        <CompanyPicker label="From Company" companies={fromCompanies} value={draft.fromCompanyId}
+                          selectedCompany={selectedFromCompany} disabled={!!editing}
+                          onChange={(companyId) => setField("fromCompanyId", companyId)} />
                         {editing ? (
                           <Field.HelperText>From Company can&apos;t be changed after creation</Field.HelperText>
                         ) : (
@@ -536,20 +526,9 @@ export default function TranWtPage() {
                         <Field.Label>
                           To Company <Field.RequiredIndicator />
                         </Field.Label>
-                        <NativeSelect.Root>
-                          <NativeSelect.Field
-                            value={draft.toCompanyId}
-                            onChange={(e) => setField("toCompanyId", e.target.value)}
-                            placeholder="Select to company"
-                          >
-                            {(toCompanies ?? []).map((c) => (
-                              <option key={c.companyId} value={c.companyId}>
-                                {c.companyName}
-                              </option>
-                            ))}
-                          </NativeSelect.Field>
-                          <NativeSelect.Indicator />
-                        </NativeSelect.Root>
+                        <CompanyPicker label="To Company" companies={toCompanies} value={draft.toCompanyId}
+                          selectedCompany={selectedToCompany}
+                          onChange={(companyId) => setField("toCompanyId", companyId)} />
                         {companyDetailsLine(selectedToCompany) && (
                           <Field.HelperText>{companyDetailsLine(selectedToCompany)}</Field.HelperText>
                         )}

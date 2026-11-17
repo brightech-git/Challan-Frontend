@@ -1,5 +1,5 @@
 // Mirrors com.Brightech.Challan.Company.CompanyTypeEnum
-export type CompanyType = "FROM" | "TO";
+export type CompanyType = "FROM" | "TO" | "BOTH";
 
 // Mirrors com.Brightech.Challan.Company.Company
 export interface Company {
@@ -12,6 +12,8 @@ export interface Company {
   address2?: string | null;
   address3?: string | null;
   address4?: string | null;
+  area?: string | null;
+  city?: string | null;
   areaCode?: string | null;
   phone?: string | null;
   email?: string | null;

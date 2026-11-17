@@ -35,6 +35,7 @@ const companyFields: FieldConfig[] = [
     options: [
       { label: "From", value: "FROM" },
       { label: "To", value: "TO" },
+      { label: "Both", value: "BOTH" },
     ],
   },
   { name: "gstNo", label: "GST No", type: "text", colSpan: 1 },
@@ -42,6 +43,8 @@ const companyFields: FieldConfig[] = [
   { name: "email", label: "Email", type: "email", colSpan: 1 },
   { name: "address1", label: "Address Line 1", type: "text", colSpan: 1 },
   { name: "address2", label: "Address Line 2", type: "text", colSpan: 1 },
+  { name: "area", label: "Area", type: "text", colSpan: 1 },
+  { name: "city", label: "City", type: "text", colSpan: 1 },
   { name: "stateCode", label: "State", type: "select", colSpan: 1 },
   { name: "panNo", label: "PAN No", type: "text", colSpan: 1 },
   { name: "cinNo", label: "CIN No", type: "text", colSpan: 1 },
@@ -79,12 +82,16 @@ export default function CompanyPage() {
     () => [
       { key: "companyId", header: "ID", width: 90 },
       { key: "companyName", header: "Name", width: 200 },
+      { key: "address1", header: "Address Line 1", width: 220 },
+      { key: "address2", header: "Address Line 2", width: 220 },
+      { key: "area", header: "Area", width: 160 },
+      { key: "city", header: "City", width: 160 },
       {
         key: "companyType",
         header: "Type",
         width: 90,
         render: (row) => (
-          <Badge colorPalette={row.companyType === "FROM" ? "purple" : "cyan"}>
+          <Badge colorPalette={row.companyType === "FROM" ? "purple" : row.companyType === "TO" ? "cyan" : "green"}>
             {row.companyType}
           </Badge>
         ),
@@ -137,6 +144,8 @@ export default function CompanyPage() {
       email: (values.email as string) || null,
       address1: (values.address1 as string) || null,
       address2: (values.address2 as string) || null,
+      area: String(values.area ?? "").trim() || null,
+      city: String(values.city ?? "").trim() || null,
       stateId: values.stateCode != null && values.stateCode !== "" ? Number(values.stateCode) : null,
       panNo: (values.panNo as string) || null,
       cinNo: String(values.cinNo ?? "").trim() || null,

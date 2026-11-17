@@ -105,10 +105,10 @@ export default function LogisticsPage() {
         challanInputs.current.get(row.key)?.focus();
         return;
       }
-      if (!validLogisticsDecimal(row.brnNo)) {
+      if (!row.brnNo.trim()) {
         updateRow(row.key, {
           error:
-            "Enter a numeric BRN No. (up to 17 digits and 3 decimal places).",
+            "Enter BRN No. (letters and numbers are allowed).",
         });
         toast.warning(
           "Check BRN No.",
@@ -209,14 +209,7 @@ export default function LogisticsPage() {
                 to:
                   transaction.toCompanyDetails?.companyName ??
                   transaction.toCompanyId,
-                area: [
-                  transaction.toCompanyDetails?.address1,
-                  transaction.toCompanyDetails?.address2,
-                  transaction.toCompanyDetails?.address3,
-                  transaction.toCompanyDetails?.address4,
-                ]
-                  .filter(Boolean)
-                  .join(", "),
+                area: transaction.toCompanyDetails?.area?.trim() ?? "",
                 goldWt: isGold ? netWeight : "",
                 silverWt: isSilver ? netWeight : "",
                 loading: false,

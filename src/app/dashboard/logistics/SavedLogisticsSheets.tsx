@@ -9,10 +9,9 @@ import { getErrorMessage, toast } from "@/lib/toast";
 import { validLogisticsDecimal, type LogisticsSheet, type LogisticsSheetDetails } from "@/types/logisticsSheet";
 import LogisticsNavigation from "./LogisticsNavigation";
 import { getStoredUser } from "@/lib/auth-storage";
-import { logisticsAddress, logisticsMetalWeight } from "@/lib/logisticsExport";
+import { logisticsArea, logisticsMetalWeight } from "@/lib/logisticsExport";
 
 const formatWeight = (value: string | number | null | undefined) => value == null ? "—" : Number(value).toFixed(3);
-const companyAddress = logisticsAddress;
 const metalWeight = logisticsMetalWeight;
 
 export default function SavedLogisticsSheets() {
@@ -91,8 +90,12 @@ export default function SavedLogisticsSheets() {
 
   const saveEdit = async () => {
     if (!editing || busy) return;
-    if (!validLogisticsDecimal(brnNo) || !validLogisticsDecimal(boxWt)) {
-      setEditError("Enter numeric BRN No. and Box Wt., with at most 17 digits and 3 decimal places.");
+    if (!brnNo.trim()) {
+      setEditError("Enter BRN No. (letters and numbers are allowed).");
+      return;
+    }
+    if (!validLogisticsDecimal(boxWt)) {
+      setEditError("Enter a non-negative box weight, with at most 17 digits and 3 decimal places.");
       return;
     }
     setBusy(true);
@@ -197,7 +200,7 @@ export default function SavedLogisticsSheets() {
                   <Table.Cell>{row.tranWt?.tranDate?.slice(0, 10) ?? "—"}</Table.Cell>
                   <Table.Cell><Text truncate title={row.fromCompanyName ?? row.fromCompanyId}>{row.fromCompanyName ?? row.fromCompanyId}</Text></Table.Cell>
                   <Table.Cell><Text truncate title={row.toCompanyName ?? row.toCompanyId}>{row.toCompanyName ?? row.toCompanyId}</Text></Table.Cell>
-                  <Table.Cell><Text truncate title={companyAddress(row)}>{companyAddress(row) || "—"}</Text></Table.Cell>
+                  <Table.Cell><Text truncate title={logisticsArea(row)}>{logisticsArea(row) || "—"}</Text></Table.Cell>
                   <Table.Cell>{row.brnNo ?? "—"}</Table.Cell>
                   <Table.Cell textAlign="right">{formatWeight(row.boxWt)}</Table.Cell>
                   <Table.Cell textAlign="right">{formatWeight(metalWeight(row, "GOLD"))}</Table.Cell>
@@ -260,7 +263,7 @@ export default function SavedLogisticsSheets() {
                   <Text fontSize="xs" fontWeight="500">Challan #{editing?.challanId}</Text>
                 </HStack>
                 <Field.Root required><Field.Label>BRN No.</Field.Label>
-                  <Input borderRadius="xl" bg="bg.subtle" value={brnNo} inputMode="decimal" disabled={busy} onChange={(event) => setBrnNo(event.target.value)} autoFocus required />
+                  <Input type="text" borderRadius="xl" bg="bg.subtle" value={brnNo} disabled={busy} onChange={(event) => setBrnNo(event.target.value)} autoFocus required />
                 </Field.Root>
                 <Field.Root required><Field.Label>Box Weight</Field.Label>
                   <Input borderRadius="xl" bg="bg.subtle" value={boxWt} inputMode="decimal" disabled={busy} onChange={(event) => setBoxWt(event.target.value)} required />

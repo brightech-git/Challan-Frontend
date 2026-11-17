@@ -28,6 +28,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { tranWtService } from "@/services";
 import { getErrorMessage, toast } from "@/lib/toast";
 import type { TranWt } from "@/types";
+import { formatCompanyAddress } from "@/lib/companyAddress";
 
 type DocumentType = "delivery-challan" | "authorization-letter" | "company-form";
 
@@ -117,16 +118,14 @@ export default function GenerateReceiptPage() {
 
     return {
       partyName: partyName.trim(),
+      fromCompanyDetails: from,
+      toCompanyDetails: to,
       date: tranWt.tranDate,
       jurisdiction: "Chennai",
       carrierName: to?.companyName ?? tranWt.toCompanyId ?? "—",
-      carrierAddress: [to?.address1, to?.address2, to?.address3, to?.address4]
-        .filter(Boolean)
-        .join(", "),
+      carrierAddress: formatCompanyAddress(to),
       sentDate: tranWt.tranDate,
-      destination: [to?.address1, to?.address2, to?.address3, to?.address4]
-        .filter(Boolean)
-        .join(", ") || "—",
+      destination: formatCompanyAddress(to) || "—",
       goldWeight: tranWt.netWt ?? null,
       ornamentsWeight: tranWt.netWt ?? null,
       cashAmount: tranWt.total ?? null,
@@ -134,6 +133,8 @@ export default function GenerateReceiptPage() {
       invoiceNo: String(tranWt.id),
       invoiceDate: tranWt.tranDate,
       company: {
+        area: from?.area ?? null,
+        city: from?.city ?? null,
         companyName: from?.companyName ?? "Laxmi Jewellery",
         subtitle: tranWt.header1 ?? null,
         email: from?.email ?? null,
@@ -141,11 +142,9 @@ export default function GenerateReceiptPage() {
         cin: from?.cinNo ?? null,
         gstNo: from?.gstNo ?? null,
         panNo: from?.panNo ?? null,
-        branchAddress: [from?.address1, from?.address2].filter(Boolean).join(", ") || null,
+        branchAddress: formatCompanyAddress(from) || null,
         branchPhone: from?.phone ?? null,
-        regdAddress: [from?.address1, from?.address2, from?.address3, from?.address4]
-          .filter(Boolean)
-          .join(", ") || null,
+        regdAddress: formatCompanyAddress(from) || null,
         centreNo: null,
       },
     };
@@ -384,7 +383,7 @@ export default function GenerateReceiptPage() {
                   <Button size="sm" colorPalette="blue" loading={savingParty} disabled={!partyChanged || isDownloading}
                     onClick={() => { void savePartyName(); }}>Save</Button>
                 </HStack>
-                <Text fontSize="xs" color="fg.muted" mt={1}>Press Enter or Save. Print/PDF also saves this name.</Text>
+                 {/* <Text fontSize="xs" color="fg.muted" mt={1}>Press Enter or Save. Print/PDF also saves this name.</Text> */}
               </Box>
             )}
 
