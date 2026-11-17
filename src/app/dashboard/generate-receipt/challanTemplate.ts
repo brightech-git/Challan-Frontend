@@ -48,3 +48,10 @@ export function injectTemplateData(
   const search = "?data=" + encodeURIComponent(json);
   return out.replace(/window\.location\.search\b(?!\s*=(?!=))/g, () => JSON.stringify(search));
 }
+
+export function injectAuthorizationTemplate(html: string, data: { partyName?: string | null }): string {
+  const injected = injectTemplateData(html, data, { varName: "data", logoClass: "letter-logo" });
+  const name = JSON.stringify(data.partyName?.trim() || "________________________").replace(/</g, "\\u003c");
+  const script = `<script>(function(){var field=document.getElementById("carrierNameBlank");if(field)field.textContent=${name};})();</script>`;
+  return /<\/body>/i.test(injected) ? injected.replace(/<\/body>/i, () => script + "</body>") : injected + script;
+}

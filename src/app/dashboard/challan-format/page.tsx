@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge, Box, Button, Dialog, Grid, NativeSelect, Portal, Text, useDisclosure } from "@chakra-ui/react";
+import { Badge, Box, Button, Dialog, Grid, Input, NativeSelect, Portal, Text, useDisclosure } from "@chakra-ui/react";
 import { LuPlus } from "react-icons/lu";
 import { DataTable } from "@/components/table";
 import { ColumnConfig } from "@/components/table/types";
@@ -15,7 +15,7 @@ import {
   useTranWt,
 } from "@/hooks";
 import { ChallanFormat, ChallanFormatInput } from "@/types";
-import { injectTemplateData } from "../generate-receipt/challanTemplate";
+import { injectAuthorizationTemplate, injectTemplateData } from "../generate-receipt/challanTemplate";
 import { amountInWords } from "@/lib/numberToWords";
 import Link from "next/link";
 import { useCopyLabels } from "@/hooks/useCopyLabels";
@@ -28,6 +28,13 @@ import { useCopyLabels } from "@/hooks/useCopyLabels";
  * is printed — see the Print action on the Transactions page.
  */
 
+const FORMAT_INFO = {
+  DELIVERYFORM: { label: "Delivery Challan", variable: "tranWt", rootId: "receipt-printable" },
+  AUTHFORM: { label: "Authorization Letter", variable: "data", rootId: "auth-letter-printable" },
+  COMPANYFORM: { label: "Company Form", variable: "tranWt", rootId: "company-form-printable" },
+} as const;
+const normalizeFormatId = (id: string) => id.trim().toUpperCase();
+
 function formatFields(editing: boolean): FieldConfig[] {
   return [
     {
@@ -36,9 +43,9 @@ function formatFields(editing: boolean): FieldConfig[] {
       type: "text",
       required: true,
       colSpan: 1,
-      placeholder: 'e.g. "CLFORM"',
+      placeholder: "DELIVERYFORM / AUTHFORM / COMPANYFORM",
       disabled: editing,
-      helperText: editing ? "Format ID can't be changed after creation" : undefined,
+      helperText: editing ? "Format ID can't be changed after creation" : "Use DELIVERYFORM, AUTHFORM or COMPANYFORM for receipt generation. IDs are saved in uppercase.",
     },
     {
       name: "content",
@@ -46,7 +53,7 @@ function formatFields(editing: boolean): FieldConfig[] {
       type: "textarea",
       colSpan: 1,
       placeholder: "<table>...{{fromCompanyDetails.companyName}}...</table>",
-      helperText: "Use {{fieldName}} placeholders — they're replaced with the transaction's values when a challan is printed.",
+      helperText: "DELIVERYFORM and COMPANYFORM use tranWt; AUTHFORM uses data (including data.partyName). Keep the printable root ID shown in the preview checks.",
     },
   ];
 }
@@ -54,6 +61,8 @@ function formatFields(editing: boolean): FieldConfig[] {
 export default function ChallanFormatPage() {
   const [editing, setEditing] = useState<ChallanFormat | null>(null);
   const [previewContent, setPreviewContent] = useState("");
+  const [previewFormatId, setPreviewFormatId] = useState("");
+  const [partyPreview, setPartyPreview] = useState<{ id: string; value: string } | null>(null);
   const [editorSession, setEditorSession] = useState(0);
   const [previewTransactionId, setPreviewTransactionId] = useState("");
   const { labels: copyLabels } = useCopyLabels();
@@ -65,6 +74,11 @@ export default function ChallanFormatPage() {
   const { data: transaction, isLoading: transactionLoading, error: transactionError } = useTranWt(
     previewTransactionId ? Number(previewTransactionId) : null
   );
+  const normalizedId = normalizeFormatId(previewFormatId);
+  const formatInfo = FORMAT_INFO[normalizedId as keyof typeof FORMAT_INFO];
+  const isAuthorization = formatInfo ? formatInfo.variable === "data" : !/\b(?:const|let|var)\s+tranWt\s*=/.test(previewContent);
+  const previewPartyName = partyPreview?.id === previewTransactionId ? partyPreview.value : transaction?.partyName ?? "";
+  const hasPrintableRoot = !formatInfo || new RegExp(`\\bid\\s*=\\s*["']${formatInfo.rootId}["']`).test(previewContent);
 
   const previewHtml = useMemo(() => {
     if (!transaction || !previewTransactionId) return previewContent;
@@ -75,7 +89,7 @@ export default function ChallanFormatPage() {
     const to = transaction.toCompanyDetails;
     const address = (company: { address1?: string | null; address2?: string | null; address3?: string | null; address4?: string | null } | null | undefined) => [company?.address1, company?.address2, company?.address3, company?.address4].filter(Boolean).join(", ");
     const authorization = {
-      partyName: transaction.partyName ?? "",
+      partyName: previewPartyName.trim(),
       headerRight,
       fromCompanyDetails: from,
       date: transaction.tranDate,
@@ -102,11 +116,10 @@ export default function ChallanFormatPage() {
       },
     };
     const delivery = { ...transaction, fromCompanyDetails: from, headerRight, fontSize: "large" };
-    const isDelivery = /\b(?:const|let|var)\s+tranWt\s*=/.test(previewContent) || editing?.id === "DELIVERYFORM" || editing?.id === "COMPANYFORM";
-    const html = injectTemplateData(previewContent, isDelivery ? delivery : authorization, {
-      varName: isDelivery ? "tranWt" : "data",
-      logoClass: isDelivery ? "logo-symbol" : "letter-logo",
-    });
+    const html = isAuthorization ? injectAuthorizationTemplate(previewContent, authorization)
+      : injectTemplateData(previewContent, delivery, {
+        varName: "tranWt", logoClass: normalizedId === "COMPANYFORM" ? undefined : "logo-symbol",
+      });
     const values: Record<string, unknown> = { ...authorization, ...delivery, tranWt: delivery, data: authorization };
     return html.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (placeholder, path: string) => {
       const value = path.split(".").reduce<unknown>((current, key) =>
@@ -114,7 +127,7 @@ export default function ChallanFormatPage() {
       if (value == null) return placeholder;
       return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]!);
     });
-  }, [previewContent, transaction, previewTransactionId, editing?.id, headerRight]);
+  }, [previewContent, transaction, previewTransactionId, headerRight, isAuthorization, normalizedId, previewPartyName]);
 
   const { data, isLoading, error } = useChallanFormats();
   const createFormat = useCreateChallanFormat();
@@ -149,6 +162,8 @@ export default function ChallanFormatPage() {
   const openCreate = () => {
     setEditing(null);
     setPreviewContent("");
+    setPreviewFormatId("");
+    setPartyPreview(null);
     setEditorSession((session) => session + 1);
     dialog.setOpen(true);
   };
@@ -156,13 +171,15 @@ export default function ChallanFormatPage() {
   const openEdit = (row: ChallanFormat) => {
     setEditing(row);
     setPreviewContent(row.content ?? "");
+    setPreviewFormatId(row.id);
+    setPartyPreview(null);
     setEditorSession((session) => session + 1);
     dialog.setOpen(true);
   };
 
   const handleSubmit = async (values: FormValues) => {
     const input: ChallanFormatInput = {
-      id: String(values.id ?? ""),
+      id: editing?.id ?? normalizeFormatId(String(values.id ?? "")),
       content: (values.content as string) || null,
     };
 
@@ -236,7 +253,23 @@ export default function ChallanFormatPage() {
                       </NativeSelect.Root>
                       <Text mt={2} fontSize="sm"><Link href="/dashboard/copy-labels" target="_blank" rel="noopener noreferrer">Manage copy labels ↗</Link></Text>
                     </Box>
+                    {isAuthorization && (
+                      <Box>
+                        <Text asChild mb={2} fontWeight="medium"><label htmlFor="format-preview-party-name">Party Name (preview only)</label></Text>
+                        <Input id="format-preview-party-name" value={previewPartyName} disabled={!transaction || !previewTransactionId}
+                          placeholder="Enter authorised person's name"
+                          onChange={(event) => setPartyPreview({ id: previewTransactionId, value: event.target.value })} />
+                        <Text mt={2} fontSize="xs" color="fg.muted">Checks the opening name field. This does not update the transaction.</Text>
+                      </Box>
+                    )}
                   </Grid>
+                  {formatInfo && <Box mt={3}>
+                    <Badge colorPalette="blue">{normalizedId} · {formatInfo.label}</Badge>
+                    <Text fontSize="xs" color="fg.muted" mt={2}>Data variable: {formatInfo.variable} · Printable root: #{formatInfo.rootId}</Text>
+                    {!!previewContent.trim() && <Text fontSize="xs" mt={1} color={hasPrintableRoot ? "green.600" : "orange.600"} role="status">
+                      {hasPrintableRoot ? "Printable root found." : `Add id="${formatInfo.rootId}" to the document container so Print/PDF can find it.`}
+                    </Text>}
+                  </Box>}
                   {transactionLoading && <Text mt={2} role="status">Loading preview data...</Text>}
                   {(transactionsError || transactionError) && <Text mt={2} color="red.600" role="alert">Could not load preview data. Please try again.</Text>}
                 </Box>
@@ -248,6 +281,9 @@ export default function ChallanFormatPage() {
                     const target = event.target;
                     if (target instanceof HTMLTextAreaElement && target.name === "content") {
                       setPreviewContent(target.value);
+                    }
+                    if (target instanceof HTMLInputElement && target.name === "id") {
+                      setPreviewFormatId(target.value);
                     }
                   }}
                 >

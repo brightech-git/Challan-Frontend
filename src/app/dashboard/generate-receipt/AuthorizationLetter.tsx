@@ -3,7 +3,7 @@
 import { useMemo, type RefObject } from "react";
 import { Center, Spinner, Text } from "@chakra-ui/react";
 import { useChallanFormat } from "@/hooks";
-import { injectTemplateData } from "./challanTemplate";
+import { injectAuthorizationTemplate } from "./challanTemplate";
 
 export interface AuthorizationLetterData {
   partyName?: string | null;
@@ -59,10 +59,7 @@ export default function AuthorizationLetter({
   const content = format?.content;
   const srcDoc = useMemo(() => {
     if (!content) return null;
-    return injectTemplateData(content, data, {
-      varName: "data",
-      logoClass: "letter-logo",
-    });
+    return injectAuthorizationTemplate(content, data);
   }, [content, data]);
 
   if (isLoading) {
